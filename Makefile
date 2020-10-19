@@ -1,4 +1,4 @@
-.PHONY: mod
+.PHONY: mod proto
 
 mod:
 	go mod download

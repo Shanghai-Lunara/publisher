@@ -1,9 +1,8 @@
 package types
 
-type Projects struct {
-	Projects map[string]Project `json:"projects" protobuf:"bytes,1,opt,name=projects"`
-}
-
 type Project struct {
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Name      string            `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Namespace string            `json:"namespace" protobuf:"bytes,2,opt,name=namespace"`
+	GroupName string            `json:"groupName" protobuf:"bytes,3,opt,name=groupName"`
+	Envs      map[string]string `json:"envs" protobuf:"bytes,4,opt,name=envs"`
 }

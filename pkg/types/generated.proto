@@ -24,14 +24,19 @@ package github.com.nevercase.publisher.pkg.types;
 // Package-wide variables from generator "generated".
 option go_package = "types";
 
+message Group {
+  optional string name = 1;
+
+  optional string namespace = 2;
+
+  map<string, Project> projects = 3;
+}
+
 message Project {
   optional string name = 1;
 }
 
-message Projects {
-  map<string, Project> projects = 1;
-}
-
 message Task {
+  optional int32 id = 1;
 }
 
