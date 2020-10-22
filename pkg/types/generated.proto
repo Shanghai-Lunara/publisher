@@ -32,11 +32,48 @@ message Group {
   map<string, Project> projects = 3;
 }
 
+message Number {
+  optional string name = 1;
+
+  optional int32 value = 2;
+}
+
 message Project {
   optional string name = 1;
+
+  optional string namespace = 2;
+
+  optional string groupName = 3;
+
+  map<string, string> envs = 4;
+}
+
+message Runner {
+  optional string hostname = 1;
+
+  optional string namespace = 2;
+
+  optional string groupName = 3;
+}
+
+message Step {
+  optional int32 id = 1;
+
+  // The phase of a Step is a simple, high-level summary of where the Step is in its lifecycle.
+  optional string status = 2;
+
+  // Envs were the environment values which would be used by the called shell script.
+  // Usually, they would include some base configuration
+  map<string, string> envs = 3;
 }
 
 message Task {
   optional int32 id = 1;
+
+  optional Project project = 2;
+}
+
+message Version {
+  repeated Number codes = 1;
 }
 

@@ -5,6 +5,6 @@ type Version struct {
 }
 
 type Number struct {
-	Name  string `json:"name"`
-	Value int32  `json:"value"`
+	Name  string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Value int32  `json:"value" protobuf:"varint,2,opt,name=value"`
 }
