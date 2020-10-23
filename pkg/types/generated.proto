@@ -71,6 +71,8 @@ message Task {
   optional int32 id = 1;
 
   optional Project project = 2;
+
+  repeated Step Step = 3;
 }
 
 message Version {
