@@ -108,6 +108,11 @@ func (g *git) pull() (res []byte, err error) {
 	return g.exec(commands)
 }
 
+func (g *git) push() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && git push", g.step.Envs[types.PublisherProjectDir])
+	return g.exec(commands)
+}
+
 func (g *git) exec(commands string) (res []byte, err error) {
 	return exec.CommandContext(context.Background(), "sh", "-c", commands).Output()
 }
