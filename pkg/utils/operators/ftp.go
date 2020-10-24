@@ -1,6 +1,9 @@
 package operators
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/Shanghai-Lunara/go-gpt/pkg/operator"
 	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
@@ -42,17 +45,21 @@ func (f *ftp) Step() *types.Step {
 }
 
 func (f *ftp) Run() (res []string, err error) {
-	if dir, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
-		if dir != "" {
-			c, err := f.operator.Conn()
-			if err != nil {
-				klog.V(2).Info(err)
-				return res, err
-			}
-			if err := c.MakeDir(dir); err != nil {
-				klog.V(2).Info(err)
-				return res, err
-			}
+	if _, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
+		dir, err := f.yunLuoMkdir()
+		if err != nil {
+			klog.V(2).Info(err)
+			return res, err
+		}
+		f.step.Envs[types.PublisherFtpMkdir] = dir
+		c, err := f.operator.Conn()
+		if err != nil {
+			klog.V(2).Info(err)
+			return res, err
+		}
+		if err := c.MakeDir(dir); err != nil {
+			klog.V(2).Info(err)
+			return res, err
 		}
 	}
 	for _, v := range f.step.UploadFiles {
@@ -62,4 +69,15 @@ func (f *ftp) Run() (res []string, err error) {
 		}
 	}
 	return res, nil
+}
+
+func (f *ftp) yunLuoMkdir() (dir string, err error) {
+	date := time.Now().Format("20060102")
+	res, err := f.operator.List(date)
+	if err != nil {
+		klog.V(2).Info(err)
+		return dir, err
+	}
+	dir = fmt.Sprintf("%s_%d", date, 1+len(res))
+	return dir, nil
 }
