@@ -64,7 +64,7 @@ func (f *ftp) Run() (res []string, err error) {
 				klog.V(2).Info(err)
 				return res, err
 			}
-			if err := c.MakeDir(dir); err != nil {
+			if err := c.MakeDir(fmt.Sprintf("%s/%s", f.config.WorkDir, dir)); err != nil {
 				klog.V(2).Info(err)
 				return res, err
 			}
