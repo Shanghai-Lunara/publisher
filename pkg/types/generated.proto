@@ -49,11 +49,13 @@ message Project {
 }
 
 message Runner {
-  optional string hostname = 1;
+  optional string name = 1;
 
-  optional string namespace = 2;
+  optional string hostname = 2;
 
-  optional string groupName = 3;
+  optional string namespace = 3;
+
+  optional string groupName = 4;
 }
 
 message Step {
@@ -65,7 +67,7 @@ message Step {
   // The phase of a Step is a simple, high-level summary of where the Step is in its lifecycle.
   optional string status = 3;
 
-  // Policy was the StepPolicy of the Step which would control the Runner
+  // Policy was the StepPolicy of the Step which could control the Runner
   optional string policy = 4;
 
   // Envs were the environment values which would be used by the called shell script.
@@ -74,6 +76,12 @@ message Step {
 
   // Output was the stdout from the executing shell commands
   repeated string output = 6;
+
+  // UploadFiles were the map of the files which would be uploaded to the remote ftp server by the Step Run().
+  repeated UploadFile uploadFiles = 7;
+
+  // RunnerName was the name of a Runner (the Runner which has been called to run this Step)
+  optional string runnerName = 8;
 }
 
 message Task {
@@ -82,6 +90,17 @@ message Task {
   optional Project project = 2;
 
   repeated Step Step = 3;
+}
+
+message UploadFile {
+  // SourceFile was the absolute path about the file which has been marked to be uploaded later.
+  optional string sourceFile = 1;
+
+  // TargetPath was the target directory, it may be needed to be created before uploading the SourceFile
+  optional string targetPath = 2;
+
+  // TargetFile the absolute path about the file which would be created in the ftp server.
+  optional string targetFile = 3;
 }
 
 message Version {
