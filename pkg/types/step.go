@@ -53,6 +53,6 @@ type UploadFile struct {
 	SourceFile string `json:"sourceFile" protobuf:"bytes,1,opt,name=sourceFile"`
 	// TargetPath was the target directory, it may be needed to be created before uploading the SourceFile
 	TargetPath string `json:"targetPath" protobuf:"bytes,2,opt,name=targetPath"`
-	// TargetFile the absolute path about the file which would be created in the ftp server.
+	// TargetFile the relative path about the file which would be created in the ftp server.
 	TargetFile string `json:"targetFile" protobuf:"bytes,3,opt,name=targetFile"`
 }

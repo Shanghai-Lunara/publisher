@@ -45,6 +45,7 @@ func (f *ftp) Step() *types.Step {
 }
 
 func (f *ftp) Run() (res []string, err error) {
+	prefix := ""
 	if _, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
 		dir, err := f.yunLuoMkdir()
 		if err != nil {
@@ -52,6 +53,7 @@ func (f *ftp) Run() (res []string, err error) {
 			return res, err
 		}
 		f.step.Envs[types.PublisherFtpMkdir] = dir
+		prefix = dir
 		c, err := f.operator.Conn()
 		if err != nil {
 			klog.V(2).Info(err)
@@ -63,7 +65,11 @@ func (f *ftp) Run() (res []string, err error) {
 		}
 	}
 	for _, v := range f.step.UploadFiles {
-		if err := f.operator.UploadFile(v.SourceFile, v.TargetFile); err != nil {
+		target := v.TargetFile
+		if prefix != "" {
+			target = fmt.Sprintf("%s/%s", prefix, target)
+		}
+		if err := f.operator.UploadFile(v.SourceFile, target); err != nil {
 			klog.V(2).Info(err)
 			return res, nil
 		}
