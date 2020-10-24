@@ -34,6 +34,10 @@ func NewFtp(host string, port int, username, password, workDir string, timeout i
 	}
 }
 
+const (
+	FtpMkdirMark = "mark"
+)
+
 type ftp struct {
 	config   *operator.FtpConfig
 	operator operator.FtpOperator
@@ -46,22 +50,24 @@ func (f *ftp) Step() *types.Step {
 
 func (f *ftp) Run() (res []string, err error) {
 	prefix := ""
-	if _, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
-		dir, err := f.yunLuoMkdir()
-		if err != nil {
-			klog.V(2).Info(err)
-			return res, err
-		}
-		f.step.Envs[types.PublisherFtpMkdir] = dir
-		prefix = dir
-		c, err := f.operator.Conn()
-		if err != nil {
-			klog.V(2).Info(err)
-			return res, err
-		}
-		if err := c.MakeDir(dir); err != nil {
-			klog.V(2).Info(err)
-			return res, err
+	if mark, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
+		if mark == FtpMkdirMark {
+			dir, err := f.yunLuoMkdir()
+			if err != nil {
+				klog.V(2).Info(err)
+				return res, err
+			}
+			f.step.Envs[types.PublisherFtpMkdir] = dir
+			prefix = dir
+			c, err := f.operator.Conn()
+			if err != nil {
+				klog.V(2).Info(err)
+				return res, err
+			}
+			if err := c.MakeDir(dir); err != nil {
+				klog.V(2).Info(err)
+				return res, err
+			}
 		}
 	}
 	for _, v := range f.step.UploadFiles {
