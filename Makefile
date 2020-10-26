@@ -1,4 +1,4 @@
-.PHONY: mod proto
+.PHONY: mod proto dc
 
 mod:
 	go mod download
@@ -6,3 +6,8 @@ mod:
 
 proto:
 	cd scripts && bash ./gen.sh api
+
+dc:
+	go mod vendor
+	cd scripts && bash ./gen.sh deepcopy
+	rm -rf vendor

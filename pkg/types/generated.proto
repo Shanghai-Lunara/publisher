@@ -99,7 +99,7 @@ message UploadFile {
   // TargetPath was the target directory, it may be needed to be created before uploading the SourceFile
   optional string targetPath = 2;
 
-  // TargetFile the absolute path about the file which would be created in the ftp server.
+  // TargetFile the relative path about the file which would be created in the ftp server.
   optional string targetFile = 3;
 }
 

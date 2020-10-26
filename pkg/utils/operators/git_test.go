@@ -321,13 +321,13 @@ func Test_git_branch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "Test_git_checkout_1",
+			name:    "Test_git_branch_1",
 			fields:  fields{step: fakeGitOperator.Step()},
 			wantRes: "main",
 			wantErr: false,
 		},
 		{
-			name:    "Test_git_checkout_2",
+			name:    "Test_git_branch_2",
 			fields:  fields{step: fakeGitOperator2.Step()},
 			wantRes: "test",
 			wantErr: false,
