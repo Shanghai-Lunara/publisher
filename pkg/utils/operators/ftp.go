@@ -49,12 +49,14 @@ func (f *ftp) Step() *types.Step {
 }
 
 func (f *ftp) Run() (res []string, err error) {
+	f.step.Phase = types.StepRunning
 	prefix := ""
 	if mark, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
 		if mark == FtpMkdirMark {
 			dir, err := f.yunLuoMkdir()
 			if err != nil {
 				klog.V(2).Info(err)
+				f.step.Phase = types.StepFailed
 				return res, err
 			}
 			f.step.Envs[types.PublisherFtpMkdir] = dir
@@ -62,10 +64,12 @@ func (f *ftp) Run() (res []string, err error) {
 			c, err := f.operator.Conn()
 			if err != nil {
 				klog.V(2).Info(err)
+				f.step.Phase = types.StepFailed
 				return res, err
 			}
 			if err := c.MakeDir(fmt.Sprintf("%s/%s", f.config.WorkDir, dir)); err != nil {
 				klog.V(2).Info(err)
+				f.step.Phase = types.StepFailed
 				return res, err
 			}
 		}
@@ -77,9 +81,11 @@ func (f *ftp) Run() (res []string, err error) {
 		}
 		if err := f.operator.UploadFile(v.SourceFile, target); err != nil {
 			klog.V(2).Info(err)
+			f.step.Phase = types.StepFailed
 			return res, nil
 		}
 	}
+	f.step.Phase = types.StepSucceeded
 	return res, nil
 }
 
