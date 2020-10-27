@@ -2,6 +2,7 @@ package operators
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Shanghai-Lunara/go-gpt/pkg/operator"
@@ -12,17 +13,13 @@ import (
 
 func NewFtp(host string, port int, username, password, workDir string, timeout int) interfaces.StepOperator {
 	envs := make(map[string]string, 0)
-	fc := &operator.FtpConfig{
-		Username: username,
-		Password: password,
-		Host:     host,
-		Port:     port,
-		WorkDir:  workDir,
-		Timeout:  timeout,
-	}
+	envs[types.PublisherFtpHost] = host
+	envs[types.PublisherFtpPort] = fmt.Sprintf("%d", port)
+	envs[types.PublisherFtpUsername] = username
+	envs[types.PublisherFtpPassword] = password
+	envs[types.PublisherFtpWorkDir] = workDir
+	envs[types.PublisherFtpTimeout] = fmt.Sprintf("%d", timeout)
 	return &ftp{
-		config:   fc,
-		operator: operator.NewFtpOperator(*fc),
 		step: &types.Step{
 			Id:     0,
 			Name:   "Ftp-Operator",
@@ -50,6 +47,11 @@ func (f *ftp) Step() *types.Step {
 
 func (f *ftp) Run() (res []string, err error) {
 	f.step.Phase = types.StepRunning
+	if err = f.reloadConfig(); err != nil {
+		klog.V(2).Info(err)
+		f.step.Phase = types.StepFailed
+		return nil, err
+	}
 	prefix := ""
 	if mark, ok := f.step.Envs[types.PublisherFtpMkdir]; ok {
 		if mark == FtpMkdirMark {
@@ -87,6 +89,29 @@ func (f *ftp) Run() (res []string, err error) {
 	}
 	f.step.Phase = types.StepSucceeded
 	return res, nil
+}
+
+func (f *ftp) reloadConfig() (err error) {
+	var port, timeout int
+	if port, err = strconv.Atoi(f.step.Envs[types.PublisherFtpPort]); err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	if timeout, err = strconv.Atoi(f.step.Envs[types.PublisherFtpTimeout]); err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	fc := &operator.FtpConfig{
+		Username: f.step.Envs[types.PublisherFtpUsername],
+		Password: f.step.Envs[types.PublisherFtpPassword],
+		Host:     f.step.Envs[types.PublisherFtpHost],
+		Port:     port,
+		WorkDir:  f.step.Envs[types.PublisherFtpWorkDir],
+		Timeout:  timeout,
+	}
+	f.config = fc
+	f.operator = operator.NewFtpOperator(*fc)
+	return nil
 }
 
 func (f *ftp) yunLuoMkdir() (dir string, err error) {
