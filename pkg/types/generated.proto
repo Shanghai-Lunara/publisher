@@ -48,16 +48,6 @@ message Project {
   map<string, string> envs = 4;
 }
 
-message Runner {
-  optional string name = 1;
-
-  optional string hostname = 2;
-
-  optional string namespace = 3;
-
-  optional string groupName = 4;
-}
-
 message Step {
   optional int32 id = 1;
 
@@ -92,7 +82,9 @@ message Task {
 
   optional Project project = 2;
 
-  repeated Step Step = 3;
+  repeated Step clientSteps = 3;
+
+  repeated Step serverSteps = 4;
 }
 
 message UploadFile {
