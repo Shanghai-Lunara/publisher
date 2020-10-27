@@ -44,8 +44,10 @@ type Step struct {
 	Output []string `json:"output" protobuf:"bytes,6,opt,name=output"`
 	// UploadFiles were the map of the files which would be uploaded to the remote ftp server by the Step Run().
 	UploadFiles []UploadFile `json:"uploadFiles" protobuf:"bytes,7,opt,name=uploadFiles"`
+	// WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
+	WriteFiles []WriteFile `json:"writeFiles" protobuf:"bytes,8,opt,name=writeFiles"`
 	// RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-	RunnerName string `json:"runnerName" protobuf:"bytes,8,opt,name=runnerName"`
+	RunnerName string `json:"runnerName" protobuf:"bytes,9,opt,name=runnerName"`
 }
 
 type UploadFile struct {
@@ -53,6 +55,13 @@ type UploadFile struct {
 	SourceFile string `json:"sourceFile" protobuf:"bytes,1,opt,name=sourceFile"`
 	// TargetPath was the target directory, it may be needed to be created before uploading the SourceFile
 	TargetPath string `json:"targetPath" protobuf:"bytes,2,opt,name=targetPath"`
-	// TargetFile the relative path about the file which would be created in the ftp server.
+	// TargetFile was the relative path about the file which would be created in the ftp server.
 	TargetFile string `json:"targetFile" protobuf:"bytes,3,opt,name=targetFile"`
+}
+
+type WriteFile struct {
+	// Content was the context of the file which needed to be written to the remote ftp server.
+	Content []byte `json:"content" protobuf:"bytes,1,opt,name=content"`
+	// TargetFile was the relative path about the file which would be created in the ftp server.
+	TargetFile string `json:"targetFile" protobuf:"bytes,2,opt,name=targetFile"`
 }

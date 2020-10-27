@@ -80,8 +80,11 @@ message Step {
   // UploadFiles were the map of the files which would be uploaded to the remote ftp server by the Step Run().
   repeated UploadFile uploadFiles = 7;
 
+  // WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
+  repeated WriteFile writeFiles = 8;
+
   // RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-  optional string runnerName = 8;
+  optional string runnerName = 9;
 }
 
 message Task {
@@ -99,11 +102,19 @@ message UploadFile {
   // TargetPath was the target directory, it may be needed to be created before uploading the SourceFile
   optional string targetPath = 2;
 
-  // TargetFile the relative path about the file which would be created in the ftp server.
+  // TargetFile was the relative path about the file which would be created in the ftp server.
   optional string targetFile = 3;
 }
 
 message Version {
   repeated Number codes = 1;
+}
+
+message WriteFile {
+  // Content was the context of the file which needed to be written to the remote ftp server.
+  optional bytes content = 1;
+
+  // TargetFile was the relative path about the file which would be created in the ftp server.
+  optional string targetFile = 2;
 }
 
