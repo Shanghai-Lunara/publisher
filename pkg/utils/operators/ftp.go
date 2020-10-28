@@ -45,6 +45,10 @@ func (f *ftp) Step() *types.Step {
 	return f.step
 }
 
+func (f *ftp) Update(s *types.Step) {
+	f.step = s.DeepCopy()
+}
+
 func (f *ftp) Run() (res []string, err error) {
 	f.step.Phase = types.StepRunning
 	if err = f.reloadConfig(); err != nil {

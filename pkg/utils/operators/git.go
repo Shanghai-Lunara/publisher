@@ -36,6 +36,10 @@ func (g *git) Step() *types.Step {
 	return g.step
 }
 
+func (g *git) Update(s *types.Step) {
+	g.step = s.DeepCopy()
+}
+
 func (g *git) Run() (res []string, err error) {
 	g.step.Phase = types.StepRunning
 	var out []byte
