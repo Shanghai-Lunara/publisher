@@ -32,6 +32,19 @@ message Group {
   map<string, Project> projects = 3;
 }
 
+// +Protocol
+// LogStream was the string which was transferred from the abstract Runner when the Runner was running a step.
+// And it would also be sent from the Scheduler to each web dashboard for showing and watching
+message LogStream {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string stepName = 3;
+
+  optional bytes output = 4;
+}
+
 message Number {
   optional string name = 1;
 
@@ -46,6 +59,36 @@ message Project {
   optional string groupName = 3;
 
   map<string, string> envs = 4;
+}
+
+// +Protocol
+// Request was the context which would be sent from the web dashboard or an abstract Runner
+message Request {
+  optional Type type = 1;
+
+  optional bytes data = 2;
+}
+
+// +Protocol
+// Response was the context which would be sent from the Scheduler.
+message Response {
+  optional Type type = 1;
+
+  optional bytes data = 2;
+}
+
+// +Protocol
+// RunnerInfo was the full information about a Runner, it would be sent from each remote abstract Runner.
+message RunnerInfo {
+  optional string name = 1;
+
+  optional string hostname = 2;
+
+  optional string namespace = 3;
+
+  optional string groupName = 4;
+
+  repeated Step steps = 5;
 }
 
 message Step {
@@ -73,8 +116,16 @@ message Step {
   // WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
   repeated WriteFile writeFiles = 8;
 
+  // Messages were the human readable message indicating details about all the conditions in a Step's lifecycle.
+  repeated string messages = 9;
+
   // RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-  optional string runnerName = 9;
+  optional string runnerName = 10;
+}
+
+// +Protocol
+message StepCommand {
+  optional Step step = 1;
 }
 
 message Task {
@@ -85,6 +136,18 @@ message Task {
   repeated Step clientSteps = 3;
 
   repeated Step serverSteps = 4;
+}
+
+// +Protocol
+// Type
+message Type {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string body = 3;
+
+  optional string command = 4;
 }
 
 message UploadFile {

@@ -32,12 +32,24 @@ func NewConnections(ctx context.Context) *connections {
 }
 
 type connections struct {
+	mu              sync.Mutex
 	autoIncrementId int32
 	items           map[int32]*conn
 	ctx             context.Context
 }
 
-func (cs *connections) NewConn(w http.ResponseWriter, r *http.Request) (*conn, error) {
+func (cs *connections) handler(w http.ResponseWriter, r *http.Request) {
+	c, err := cs.newConn(w, r)
+	if err != nil {
+		klog.V(2).Info(err)
+		return
+	}
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.items[c.id] = c
+}
+
+func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, error) {
 	client, err := upGrader.Upgrade(w, r, nil)
 	if err != nil {
 		klog.V(2).Info(err)

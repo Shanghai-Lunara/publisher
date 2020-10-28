@@ -46,8 +46,10 @@ type Step struct {
 	UploadFiles []UploadFile `json:"uploadFiles" protobuf:"bytes,7,opt,name=uploadFiles"`
 	// WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
 	WriteFiles []WriteFile `json:"writeFiles" protobuf:"bytes,8,opt,name=writeFiles"`
+	// Messages were the human readable message indicating details about all the conditions in a Step's lifecycle.
+	Messages []string `json:"messages" protobuf:"bytes,9,opt,name=messages"`
 	// RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-	RunnerName string `json:"runnerName" protobuf:"bytes,9,opt,name=runnerName"`
+	RunnerName string `json:"runnerName" protobuf:"bytes,10,opt,name=runnerName"`
 }
 
 type UploadFile struct {
