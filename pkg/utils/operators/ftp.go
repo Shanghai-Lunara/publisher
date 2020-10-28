@@ -49,7 +49,7 @@ func (f *ftp) Update(s *types.Step) {
 	f.step = s.DeepCopy()
 }
 
-func (f *ftp) Run() (res []string, err error) {
+func (f *ftp) Run(output chan<- string) (res []string, err error) {
 	f.step.Phase = types.StepRunning
 	if err = f.reloadConfig(); err != nil {
 		klog.V(2).Info(err)
