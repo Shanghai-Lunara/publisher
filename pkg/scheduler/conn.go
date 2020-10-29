@@ -27,6 +27,7 @@ func NewConnections(ctx context.Context) *connections {
 	return &connections{
 		autoIncrementId: 0,
 		items:           make(map[int32]*conn, 0),
+		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
 }
@@ -35,7 +36,24 @@ type connections struct {
 	mu              sync.Mutex
 	autoIncrementId int32
 	items           map[int32]*conn
+	removedChan     chan int32
 	ctx             context.Context
+}
+
+func (cs *connections) remove() {
+	for {
+		select {
+		case <-cs.ctx.Done():
+			return
+		case id, isClose := <-cs.removedChan:
+			if !isClose {
+				return
+			}
+			cs.mu.Lock()
+			delete(cs.items, id)
+			cs.mu.Unlock()
+		}
+	}
 }
 
 func (cs *connections) handler(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +81,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 		lastPingTime:          time.Now(),
 		keepAliveTimeoutInSec: WebsocketConnectionTimeout,
 		closeOnce:             sync.Once{},
+		removedChan:           cs.removedChan,
 		ctx:                   ctx,
 		cancel:                cancel,
 	}
@@ -72,6 +91,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 	return c, nil
 }
 
+// conn was an abstract runner or a web dashboard client
 type conn struct {
 	id                    int32
 	conn                  *websocket.Conn
@@ -79,6 +99,7 @@ type conn struct {
 	lastPingTime          time.Time
 	keepAliveTimeoutInSec int64
 	closeOnce             sync.Once
+	removedChan           chan<- int32
 	ctx                   context.Context
 	cancel                context.CancelFunc
 }
@@ -103,6 +124,7 @@ func (c *conn) keepAlive() {
 func (c *conn) close() {
 	c.closeOnce.Do(func() {
 		c.cancel()
+		c.removedChan <- c.id
 	})
 }
 

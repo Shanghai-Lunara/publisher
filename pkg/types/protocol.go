@@ -24,10 +24,10 @@ const (
 // +Protocol
 // Type
 type Type struct {
-	Namespace string  `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName string  `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	Body      Body    `json:"body" protobuf:"bytes,3,opt,name=body"`
-	Command   Command `json:"command" protobuf:"bytes,4,opt,name=command"`
+	Namespace string `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName string `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	Body      Body   `json:"body" protobuf:"bytes,3,opt,name=body"`
+	Param     Param  `json:"param" protobuf:"bytes,4,opt,name=param"`
 }
 
 type Content string
@@ -37,14 +37,22 @@ const (
 	ContentLogStream  Content = "LogStream"
 )
 
+type RunnerType string
+
+const (
+	RunnerTypeClient RunnerType = "client"
+	RunnerTypeServer RunnerType = "server"
+)
+
 // +Protocol
 // RunnerInfo was the full information about a Runner, it would be sent from each remote abstract Runner.
 type RunnerInfo struct {
-	Name      string `json:"name" protobuf:"bytes,1,opt,name=name"`
-	Hostname  string `json:"hostname" protobuf:"bytes,2,opt,name=hostname"`
-	Namespace string `json:"namespace" protobuf:"bytes,3,opt,name=namespace"`
-	GroupName string `json:"groupName" protobuf:"bytes,4,opt,name=groupName"`
-	Steps     []Step `json:"steps" protobuf:"bytes,5,opt,name=steps"`
+	Name       string     `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Hostname   string     `json:"hostname" protobuf:"bytes,2,opt,name=hostname"`
+	Namespace  string     `json:"namespace" protobuf:"bytes,3,opt,name=namespace"`
+	GroupName  string     `json:"groupName" protobuf:"bytes,4,opt,name=groupName"`
+	RunnerType RunnerType `json:"runnerType" protobuf:"bytes,5,opt,name=runnerType"`
+	Steps      []Step     `json:"steps" protobuf:"bytes,6,opt,name=steps"`
 }
 
 // +Protocol
@@ -57,16 +65,30 @@ type LogStream struct {
 	Output    []byte `json:"output" protobuf:"bytes,4,opt,name=output"`
 }
 
+// Param
+type Param struct {
+	Command     Command     `json:"command" protobuf:"bytes,1,opt,name=command"`
+	ListContent ListContent `json:"listContent" protobuf:"bytes,2,opt,name=listContent"`
+	Step        Step        `json:"step" protobuf:"bytes,3,opt,name=step"`
+}
+
+// Command
 type Command string
 
 const (
+	CommandList   Command = "List"
 	CommandUpdate Command = "Update"
 	CommandRun    Command = "Run"
 	CommandResult Command = "Result"
 )
 
 // +Protocol
-//
-type StepCommand struct {
-	Step Step `json:"step" protobuf:"bytes,1,opt,name=step"`
-}
+// ListContent
+type ListContent string
+
+const (
+	ListContentNamespaces ListContent = "Namespaces"
+	ListContentGroups     ListContent = "Groups"
+	ListContentTasks      ListContent = "Tasks"
+	ListContentSteps      ListContent = "Steps"
+)

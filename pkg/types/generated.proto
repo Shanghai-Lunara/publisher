@@ -25,11 +25,11 @@ package github.com.nevercase.publisher.pkg.types;
 option go_package = "types";
 
 message Group {
-  optional string name = 1;
+  repeated Task tasks = 1;
+}
 
-  optional string namespace = 2;
-
-  map<string, Project> projects = 3;
+message Groups {
+  map<string, Group> gitems = 1;
 }
 
 // +Protocol
@@ -45,20 +45,13 @@ message LogStream {
   optional bytes output = 4;
 }
 
-message Number {
-  optional string name = 1;
+// Param
+message Param {
+  optional string command = 1;
 
-  optional int32 value = 2;
-}
+  optional string listContent = 2;
 
-message Project {
-  optional string name = 1;
-
-  optional string namespace = 2;
-
-  optional string groupName = 3;
-
-  map<string, string> envs = 4;
+  optional Step step = 3;
 }
 
 // +Protocol
@@ -88,7 +81,13 @@ message RunnerInfo {
 
   optional string groupName = 4;
 
-  repeated Step steps = 5;
+  optional string runnerType = 5;
+
+  repeated Step steps = 6;
+}
+
+message Scheduler {
+  map<string, Groups> nitems = 1;
 }
 
 message Step {
@@ -123,19 +122,10 @@ message Step {
   optional string runnerName = 10;
 }
 
-// +Protocol
-message StepCommand {
-  optional Step step = 1;
-}
-
 message Task {
   optional int32 id = 1;
 
-  optional Project project = 2;
-
-  repeated Step clientSteps = 3;
-
-  repeated Step serverSteps = 4;
+  map<string, RunnerInfo> runners = 2;
 }
 
 // +Protocol
@@ -147,7 +137,7 @@ message Type {
 
   optional string body = 3;
 
-  optional string command = 4;
+  optional Param param = 4;
 }
 
 message UploadFile {
@@ -159,10 +149,6 @@ message UploadFile {
 
   // TargetFile was the relative path about the file which would be created in the ftp server.
   optional string targetFile = 3;
-}
-
-message Version {
-  repeated Number codes = 1;
 }
 
 message WriteFile {
