@@ -32,6 +32,35 @@ message Groups {
   map<string, Group> gitems = 1;
 }
 
+message ListGroupNameRequest {
+  optional string namespace = 1;
+}
+
+message ListGroupNameResponse {
+  repeated string items = 1;
+}
+
+message ListNamespaceRequest {
+}
+
+message ListNamespaceResponse {
+  repeated string items = 1;
+}
+
+message ListTaskRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional int32 page = 3;
+
+  optional int32 length = 4;
+}
+
+message ListTaskResponse {
+  repeated Task tasks = 1;
+}
+
 // +Protocol
 // LogStream was the string which was transferred from the abstract Runner when the Runner was running a step.
 // And it would also be sent from the Scheduler to each web dashboard for showing and watching
@@ -43,15 +72,6 @@ message LogStream {
   optional string stepName = 3;
 
   optional bytes output = 4;
-}
-
-// Param
-message Param {
-  optional string command = 1;
-
-  optional string listContent = 2;
-
-  optional Step step = 3;
 }
 
 // +Protocol
@@ -141,7 +161,7 @@ message Type {
 
   optional string body = 3;
 
-  optional Param param = 4;
+  optional string serviceApi = 4;
 }
 
 message UploadFile {

@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"fmt"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
 	"sort"
@@ -57,52 +56,43 @@ const (
 
 func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	req := &types.Request{}
-	if _, err = req.MarshalTo(message); err != nil {
+	if err = req.Unmarshal(message); err != nil {
 		klog.V(2).Info(err)
 		return res, err
 	}
-	switch req.Type.Body {
-	case types.BodyDashboard:
-		switch req.Type.Param.Command {
-		case types.CommandList:
-			switch req.Type.Param.ListContent {
-			case types.ListContentNamespaces:
-				return s.handleListNamespaces()
-			case types.ListContentGroups:
-				return s.handleListGroupNames(types.Namespace(req.Type.Namespace))
-			case types.ListContentTasks:
-			case types.ListContentSteps:
-			}
-		}
-	case types.BodyRunner:
-		switch req.Type.Param.Command {
-		case types.CommandUpdate:
-		case types.CommandRun:
-		case types.CommandResult:
-		}
-	default:
-		return res, fmt.Errorf(RequestTypeBodyError, req.Type.Body)
+	switch req.Type.ServiceAPI {
+	case types.ListNamespace:
+		return s.handleListNamespaces(req.Data)
+	case types.ListGroupName:
+		return s.handleListGroupNames(req.Data)
+	case types.ListTask:
+		return s.handleListTasks(req.Data)
 	}
 	return res, nil
 }
 
-func (s *Scheduler) handleListNamespaces() (res []byte, err error) {
+func (s *Scheduler) handleListNamespaces(data []byte) (res []byte, err error) {
 	keys := make([]string, 0)
 	for k := range s.items {
 		keys = append(keys, string(k))
 	}
 	sort.Strings(keys)
-	result := &types.Result{
+	result := &types.ListNamespaceResponse{
 		Items: keys,
 	}
 	return result.Marshal()
 }
 
-func (s *Scheduler) handleListGroupNames(namespace types.Namespace) (res []byte, err error) {
-	result := &types.Result{
+func (s *Scheduler) handleListGroupNames(data []byte) (res []byte, err error) {
+	req := &types.ListGroupNameRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	result := &types.ListGroupNameResponse{
 		Items: make([]string, 0),
 	}
-	if t, ok := s.items[namespace]; ok {
+	if t, ok := s.items[req.Namespace]; ok {
 		keys := make([]string, 0)
 		for k := range t.items {
 			keys = append(keys, string(k))
@@ -110,5 +100,18 @@ func (s *Scheduler) handleListGroupNames(namespace types.Namespace) (res []byte,
 		sort.Strings(keys)
 		result.Items = keys
 	}
+	return result.Marshal()
+}
+
+func (s *Scheduler) handleListTasks(data []byte) (res []byte, err error) {
+	req := &types.ListTaskRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	result := &types.ListTaskResponse{
+		Tasks: make([]types.Task, 0),
+	}
+
 	return result.Marshal()
 }

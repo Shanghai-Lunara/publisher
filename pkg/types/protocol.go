@@ -24,10 +24,10 @@ const (
 // +Protocol
 // Type
 type Type struct {
-	Namespace string `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName string `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	Body      Body   `json:"body" protobuf:"bytes,3,opt,name=body"`
-	Param     Param  `json:"param" protobuf:"bytes,4,opt,name=param"`
+	Namespace  string     `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  string     `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	Body       Body       `json:"body" protobuf:"bytes,3,opt,name=body"`
+	ServiceAPI ServiceAPI `json:"serviceApi" protobuf:"bytes,4,opt,name=serviceApi"`
 }
 
 type Content string
@@ -65,34 +65,43 @@ type LogStream struct {
 	Output    []byte `json:"output" protobuf:"bytes,4,opt,name=output"`
 }
 
-// Param
-type Param struct {
-	Command     Command     `json:"command" protobuf:"bytes,1,opt,name=command"`
-	ListContent ListContent `json:"listContent" protobuf:"bytes,2,opt,name=listContent"`
-	Step        Step        `json:"step" protobuf:"bytes,3,opt,name=step"`
-}
-
-// Command
-type Command string
+type ServiceAPI string
 
 const (
-	CommandList   Command = "List"
-	CommandUpdate Command = "Update"
-	CommandRun    Command = "Run"
-	CommandResult Command = "Result"
-)
-
-// +Protocol
-// ListContent
-type ListContent string
-
-const (
-	ListContentNamespaces ListContent = "Namespaces"
-	ListContentGroups     ListContent = "Groups"
-	ListContentTasks      ListContent = "Tasks"
-	ListContentSteps      ListContent = "Steps"
+	ListNamespace  ServiceAPI = "ListNamespace"
+	ListGroupName  ServiceAPI = "ListGroupName"
+	ListTask       ServiceAPI = "ListTask"
+	RegisterRunner ServiceAPI = "RegisterRunner"
+	UpdateStep     ServiceAPI = "UpdateStep"
+	RunStep        ServiceAPI = "RunStep"
 )
 
 type Result struct {
 	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
+}
+
+type ListNamespaceRequest struct {
+}
+
+type ListNamespaceResponse struct {
+	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
+}
+
+type ListGroupNameRequest struct {
+	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+}
+
+type ListGroupNameResponse struct {
+	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
+}
+
+type ListTaskRequest struct {
+	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	Page      int32     `json:"page" protobuf:"varint,3,opt,name=page"`
+	Length    int32     `json:"length" protobuf:"varint,4,opt,name=length"`
+}
+
+type ListTaskResponse struct {
+	Tasks []Task `json:"tasks" protobuf:"bytes,1,opt,name=tasks"`
 }
