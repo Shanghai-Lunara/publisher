@@ -10,8 +10,10 @@ type Request struct {
 // +Protocol
 // Response was the context which would be sent from the Scheduler.
 type Response struct {
-	Type Type   `json:"type" protobuf:"bytes,1,opt,name=type"`
-	Data []byte `json:"data" protobuf:"bytes,2,opt,name=data"`
+	Code    int32  `json:"code" protobuf:"varint,1,opt,name=code"`
+	Message string `json:"message" protobuf:"bytes,2,opt,name=message"`
+	Type    Type   `json:"type" protobuf:"bytes,3,opt,name=type"`
+	Data    []byte `json:"data" protobuf:"bytes,4,opt,name=data"`
 }
 
 type Body string
@@ -24,8 +26,8 @@ const (
 // +Protocol
 // Type
 type Type struct {
-	Namespace  string     `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName  string     `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	Namespace  Namespace  `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName  `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
 	Body       Body       `json:"body" protobuf:"bytes,3,opt,name=body"`
 	ServiceAPI ServiceAPI `json:"serviceApi" protobuf:"bytes,4,opt,name=serviceApi"`
 }
@@ -44,13 +46,27 @@ const (
 	RunnerTypeServer RunnerType = "server"
 )
 
+type Namespace string
+
+type GroupName string
+
+type Group struct {
+	Tasks   []Task       `json:"tasks" protobuf:"bytes,1,rep,name=tasks"`
+	Runners []RunnerInfo `json:"runners" protobuf:"bytes,2,rep,name=runners"`
+}
+
+type Task struct {
+	Id      int32                 `json:"id" protobuf:"varint,1,opt,name=id"`
+	Runners map[string]RunnerInfo `json:"runners" protobuf:"bytes,2,opt,name=runners"`
+}
+
 // +Protocol
 // RunnerInfo was the full information about a Runner, it would be sent from each remote abstract Runner.
 type RunnerInfo struct {
 	Name       string     `json:"name" protobuf:"bytes,1,opt,name=name"`
 	Hostname   string     `json:"hostname" protobuf:"bytes,2,opt,name=hostname"`
-	Namespace  string     `json:"namespace" protobuf:"bytes,3,opt,name=namespace"`
-	GroupName  string     `json:"groupName" protobuf:"bytes,4,opt,name=groupName"`
+	Namespace  Namespace  `json:"namespace" protobuf:"bytes,3,opt,name=namespace"`
+	GroupName  GroupName  `json:"groupName" protobuf:"bytes,4,opt,name=groupName"`
 	RunnerType RunnerType `json:"runnerType" protobuf:"bytes,5,opt,name=runnerType"`
 	Steps      []Step     `json:"steps" protobuf:"bytes,6,opt,name=steps"`
 }
@@ -59,10 +75,10 @@ type RunnerInfo struct {
 // LogStream was the string which was transferred from the abstract Runner when the Runner was running a step.
 // And it would also be sent from the Scheduler to each web dashboard for showing and watching
 type LogStream struct {
-	Namespace string `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName string `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	StepName  string `json:"stepName" protobuf:"bytes,3,opt,name=stepName"`
-	Output    []byte `json:"output" protobuf:"bytes,4,opt,name=output"`
+	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	StepName  string    `json:"stepName" protobuf:"bytes,3,opt,name=stepName"`
+	Output    []byte    `json:"output" protobuf:"bytes,4,opt,name=output"`
 }
 
 type ServiceAPI string
@@ -104,4 +120,11 @@ type ListTaskRequest struct {
 
 type ListTaskResponse struct {
 	Tasks []Task `json:"tasks" protobuf:"bytes,1,opt,name=tasks"`
+}
+
+type RegisterRunnerRequest struct {
+	RunnerInfo RunnerInfo `json:"runnerInfo" protobuf:"bytes,1,opt,name=runnerInfo"`
+}
+
+type RegisterRunnerResponse struct {
 }

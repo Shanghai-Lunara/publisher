@@ -26,10 +26,8 @@ option go_package = "types";
 
 message Group {
   repeated Task tasks = 1;
-}
 
-message Groups {
-  map<string, Group> gitems = 1;
+  repeated RunnerInfo runners = 2;
 }
 
 message ListGroupNameRequest {
@@ -74,6 +72,13 @@ message LogStream {
   optional bytes output = 4;
 }
 
+message RegisterRunnerRequest {
+  optional RunnerInfo runnerInfo = 1;
+}
+
+message RegisterRunnerResponse {
+}
+
 // +Protocol
 // Request was the context which would be sent from the web dashboard or an abstract Runner
 message Request {
@@ -85,9 +90,13 @@ message Request {
 // +Protocol
 // Response was the context which would be sent from the Scheduler.
 message Response {
-  optional Type type = 1;
+  optional int32 code = 1;
 
-  optional bytes data = 2;
+  optional string message = 2;
+
+  optional Type type = 3;
+
+  optional bytes data = 4;
 }
 
 message Result {
@@ -108,10 +117,6 @@ message RunnerInfo {
   optional string runnerType = 5;
 
   repeated Step steps = 6;
-}
-
-message Scheduler {
-  map<string, Groups> nitems = 1;
 }
 
 message Step {

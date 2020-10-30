@@ -1,9 +1,12 @@
 package scheduler
 
 import (
+	"fmt"
+	"sort"
+	"sync"
+
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
-	"sort"
 )
 
 const (
@@ -38,6 +41,7 @@ func NewScheduler() *Scheduler {
 }
 
 type Scheduler struct {
+	mu    sync.Mutex
 	items map[types.Namespace]*Groups
 }
 
@@ -50,10 +54,6 @@ type Group struct {
 	Tasks   []*types.Task                `json:"tasks" protobuf:"bytes,2,opt,name=tasks"`
 }
 
-const (
-	RequestTypeBodyError = "error req.Type.Body:%v was not matched"
-)
-
 func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	req := &types.Request{}
 	if err = req.Unmarshal(message); err != nil {
@@ -62,13 +62,24 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	}
 	switch req.Type.ServiceAPI {
 	case types.ListNamespace:
-		return s.handleListNamespaces(req.Data)
+		res, err = s.handleListNamespaces(req.Data)
 	case types.ListGroupName:
-		return s.handleListGroupNames(req.Data)
+		res, err = s.handleListGroupNames(req.Data)
 	case types.ListTask:
-		return s.handleListTasks(req.Data)
+		res, err = s.handleListTasks(req.Data)
 	}
-	return res, nil
+	if err != nil {
+		klog.V(2).Info(err)
+		//todo handle error
+		return nil, err
+	}
+	result := &types.Response{
+		Code:    0,
+		Message: "",
+		Type:    req.Type,
+		Data:    res,
+	}
+	return result.Marshal()
 }
 
 func (s *Scheduler) handleListNamespaces(data []byte) (res []byte, err error) {
@@ -114,4 +125,39 @@ func (s *Scheduler) handleListTasks(data []byte) (res []byte, err error) {
 	}
 
 	return result.Marshal()
+}
+
+func (s *Scheduler) handleRegisterRunner(data []byte) (res []byte, err error) {
+	req := &types.RegisterRunnerRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	var g *Group
+	if g, err = s.getGroup(req.RunnerInfo.Namespace, req.RunnerInfo.GroupName); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	g.Runners[req.RunnerInfo.Name] = &req.RunnerInfo
+	result := &types.RegisterRunnerResponse{}
+	return result.Marshal()
+}
+
+const (
+	ErrNamespaceWasNotExisted = "error: namespace:%s was not existed"
+	ErrGroupNameWasNotExisted = "error: namespace:%s groupName:%s was not existed"
+)
+
+func (s *Scheduler) getGroup(namespace types.Namespace, groupName types.GroupName) (*Group, error) {
+	if t, ok := s.items[namespace]; ok {
+		if t2, ok := t.items[groupName]; ok {
+			return t2, nil
+		} else {
+			return nil, fmt.Errorf(ErrGroupNameWasNotExisted, namespace, groupName)
+		}
+	} else {
+		return nil, fmt.Errorf(ErrNamespaceWasNotExisted, namespace)
+	}
 }
