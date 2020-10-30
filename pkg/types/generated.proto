@@ -70,6 +70,10 @@ message Response {
   optional bytes data = 2;
 }
 
+message Result {
+  repeated string items = 1;
+}
+
 // +Protocol
 // RunnerInfo was the full information about a Runner, it would be sent from each remote abstract Runner.
 message RunnerInfo {

@@ -92,3 +92,7 @@ const (
 	ListContentTasks      ListContent = "Tasks"
 	ListContentSteps      ListContent = "Steps"
 )
+
+type Result struct {
+	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
+}

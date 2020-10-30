@@ -37,6 +37,7 @@ type connections struct {
 	autoIncrementId int32
 	items           map[int32]*conn
 	removedChan     chan int32
+	scheduler       *Scheduler
 	ctx             context.Context
 }
 
@@ -75,6 +76,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 	}
 	ctx, cancel := context.WithCancel(cs.ctx)
 	c := &conn{
+		scheduler:             cs.scheduler,
 		id:                    atomic.AddInt32(&cs.autoIncrementId, 1),
 		conn:                  client,
 		writeChan:             make(chan []byte, 4096),
@@ -93,6 +95,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 
 // conn was an abstract runner or a web dashboard client
 type conn struct {
+	scheduler             *Scheduler
 	id                    int32
 	conn                  *websocket.Conn
 	writeChan             chan []byte
@@ -137,7 +140,11 @@ func (c *conn) readPump() {
 			klog.V(2).Info(err)
 			return
 		}
-		// todo handle message
+		res, err := c.scheduler.handle(data)
+		if err != nil {
+			return
+		}
+		c.writeChan <- res
 	}
 }
 
@@ -145,6 +152,14 @@ func (c *conn) writePump() {
 	defer c.close()
 	for {
 		select {
+		case msg, isClose := <-c.writeChan:
+			if !isClose {
+				return
+			}
+			if err := c.conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+				klog.V(2).Info(err)
+				return
+			}
 		case <-c.ctx.Done():
 			return
 		}
