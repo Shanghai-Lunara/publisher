@@ -48,7 +48,18 @@ type connections struct {
 	ctx             context.Context
 }
 
+type broadcastType string
+
+const (
+	broadcastTypeBindRunner broadcastType = "bindRunner"
+	broadcastTypePing       broadcastType = "ping"
+	broadcastTypeDashboard  broadcastType = "dashboard"
+	broadcastTypeRunner     broadcastType = "runner"
+)
+
 type broadcast struct {
+	bt         broadcastType
+	clientId   int32
 	runnerName string
 	msg        []byte
 }
@@ -60,14 +71,17 @@ func (cs *connections) broadcastToDashboard() {
 			if !isClose {
 				return
 			}
-			if broadcast.runnerName == "" {
-
-			} else {
-
-			}
-			switch broadcast.runnerName {
-			case "":
-				// if the runnerName was empty string that shows the broadcast should be sent to all dashboards
+			switch broadcast.bt {
+			case broadcastTypeBindRunner:
+				cs.mu.RLock()
+				if t, ok := cs.items[broadcast.clientId]; ok {
+					t.runnerName = broadcast.runnerName
+				} else {
+					// todo handle err
+				}
+				cs.mu.RUnlock()
+			case broadcastTypePing:
+			case broadcastTypeDashboard:
 				cs.mu.RLock()
 				for _, v := range cs.items {
 					if v.body == types.BodyDashboard {
@@ -75,7 +89,7 @@ func (cs *connections) broadcastToDashboard() {
 					}
 				}
 				cs.mu.RUnlock()
-			default:
+			case broadcastTypeRunner:
 				cs.mu.RLock()
 				for _, v := range cs.items {
 					if v.body == types.BodyDashboard {
@@ -159,6 +173,7 @@ type conn struct {
 	scheduler             *Scheduler
 	body                  types.Body
 	id                    int32
+	runnerName            string
 	conn                  *websocket.Conn
 	writeChan             chan []byte
 	lastPingTime          time.Time
@@ -186,6 +201,10 @@ func (c *conn) keepAlive() {
 	}
 }
 
+func (c *conn) ping() {
+	c.lastPingTime = time.Now()
+}
+
 func (c *conn) close() {
 	c.closeOnce.Do(func() {
 		c.cancel()
@@ -202,7 +221,7 @@ func (c *conn) readPump() {
 			klog.V(2).Info(err)
 			return
 		}
-		res, err := c.scheduler.handle(data)
+		res, err := c.scheduler.handle(data, c.id)
 		if err != nil {
 			return
 		}

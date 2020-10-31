@@ -56,7 +56,7 @@ type Group struct {
 	Tasks   []*types.Task                `json:"tasks" protobuf:"bytes,2,opt,name=tasks"`
 }
 
-func (s *Scheduler) handle(message []byte) (res []byte, err error) {
+func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err error) {
 	req := &types.Request{}
 	if err = req.Unmarshal(message); err != nil {
 		klog.V(2).Info(err)
@@ -64,7 +64,7 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	}
 	switch req.Type.ServiceAPI {
 	case types.Ping:
-		res, err = s.handlePing(req.Data)
+		res, err = s.handlePing(req.Data, clientId)
 	case types.ListNamespace:
 		res, err = s.handleListNamespaces(req.Data)
 	case types.ListGroupName:
@@ -72,7 +72,7 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	case types.ListTask:
 		res, err = s.handleListTasks(req.Data)
 	case types.RegisterRunner:
-		res, err = s.handleRegisterRunner(req.Data)
+		res, err = s.handleRegisterRunner(req.Data, clientId)
 	case types.RunStep:
 		// RunStep must be sent from the Dashboard in the Scheduler handler.
 		// And then the command would be transmitted to the specific Runner.
@@ -101,7 +101,13 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 	return result.Marshal()
 }
 
-func (s *Scheduler) handlePing(data []byte) (res []byte, err error) {
+func (s *Scheduler) handlePing(data []byte, clientId int32) (res []byte, err error) {
+	s.broadcast <- &broadcast{
+		bt:         broadcastTypePing,
+		clientId:   clientId,
+		runnerName: "",
+		msg:        res,
+	}
 	t := &types.PongResponse{}
 	return t.Marshal()
 }
@@ -151,7 +157,7 @@ func (s *Scheduler) handleListTasks(data []byte) (res []byte, err error) {
 	return result.Marshal()
 }
 
-func (s *Scheduler) handleRegisterRunner(data []byte) (res []byte, err error) {
+func (s *Scheduler) handleRegisterRunner(data []byte, clientId int32) (res []byte, err error) {
 	req := &types.RegisterRunnerRequest{}
 	if err = req.Unmarshal(data); err != nil {
 		klog.V(2).Info(err)
@@ -166,6 +172,12 @@ func (s *Scheduler) handleRegisterRunner(data []byte) (res []byte, err error) {
 	defer s.mu.Unlock()
 	if _, ok := g.Runners[req.RunnerInfo.Name]; !ok {
 		g.Runners[req.RunnerInfo.Name] = &req.RunnerInfo
+	}
+	s.broadcast <- &broadcast{
+		bt:         broadcastTypeBindRunner,
+		clientId:   clientId,
+		runnerName: req.RunnerInfo.Name,
+		msg:        res,
 	}
 	result := &types.RegisterRunnerResponse{}
 	return result.Marshal()
@@ -314,6 +326,7 @@ func (s *Scheduler) runStepToRunner(namespace types.Namespace, groupName types.G
 		return err
 	}
 	s.broadcast <- &broadcast{
+		bt:         broadcastTypeRunner,
 		runnerName: runnerName,
 		msg:        data2,
 	}
@@ -344,6 +357,7 @@ func (s *Scheduler) updateStepToDashboard(namespace types.Namespace, groupName t
 		return err
 	}
 	s.broadcast <- &broadcast{
+		bt:         broadcastTypeDashboard,
 		runnerName: "",
 		msg:        data2,
 	}
@@ -371,6 +385,7 @@ func (s *Scheduler) handleLogStream(data []byte) (res []byte, err error) {
 		return nil, err
 	}
 	s.broadcast <- &broadcast{
+		bt:         broadcastTypeDashboard,
 		runnerName: "",
 		msg:        data2,
 	}
