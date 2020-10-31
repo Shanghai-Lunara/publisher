@@ -79,9 +79,13 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 		// At the same time, the Runner status would be changed and synced to all dashboards.
 		res, err = s.handleRunStep(req.Data)
 	case types.UpdateStep:
-
 	case types.CompleteStep:
 		// CompleteStep must be sent from the Runner in the Scheduler handler.
+		res, err = s.handleCompleteStep(req.Data)
+	case types.LogStream:
+		// CompleteStep must be sent from the Runner in the Scheduler handler.
+		// The output should be inserted into mysql, and sent to all dashboard at the same time
+		res, err = s.handleLogStream(req.Data)
 	}
 	if err != nil {
 		klog.V(2).Info(err)
@@ -344,4 +348,31 @@ func (s *Scheduler) updateStepToDashboard(namespace types.Namespace, groupName t
 		msg:        data2,
 	}
 	return nil
+}
+
+func (s *Scheduler) handleLogStream(data []byte) (res []byte, err error) {
+	req := &types.LogStreamRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	// todo insert into the db or runtime cache
+
+	// broadcast to all dashboards
+	req2 := &types.Request{
+		Type: types.Type{
+			ServiceAPI: types.LogStream,
+		},
+		Data: data,
+	}
+	data2, err := req2.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	s.broadcast <- &broadcast{
+		runnerName: "",
+		msg:        data2,
+	}
+	return res, nil
 }

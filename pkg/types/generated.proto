@@ -73,16 +73,21 @@ message ListTaskResponse {
 }
 
 // +Protocol
-// LogStream was the string which was transferred from the abstract Runner when the Runner was running a step.
+// LogStreamRequest was the string which was transferred from the abstract Runner when the Runner was running a step.
 // And it would also be sent from the Scheduler to each web dashboard for showing and watching
-message LogStream {
+message LogStreamRequest {
   optional string namespace = 1;
 
   optional string groupName = 2;
 
-  optional string stepName = 3;
+  optional string runnerName = 3;
 
-  optional bytes output = 4;
+  optional string stepName = 4;
+
+  optional bytes output = 5;
+}
+
+message LogStreamResponse {
 }
 
 message PingRequest {
@@ -192,13 +197,9 @@ message Task {
 // +Protocol
 // Type
 message Type {
-  optional string namespace = 1;
+  optional string body = 1;
 
-  optional string groupName = 2;
-
-  optional string body = 3;
-
-  optional string serviceApi = 4;
+  optional string serviceApi = 2;
 }
 
 message UpdateStepRequest {

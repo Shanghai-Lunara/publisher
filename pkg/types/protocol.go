@@ -26,10 +26,8 @@ const (
 // +Protocol
 // Type
 type Type struct {
-	Namespace  Namespace  `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName  GroupName  `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	Body       Body       `json:"body" protobuf:"bytes,3,opt,name=body"`
-	ServiceAPI ServiceAPI `json:"serviceApi" protobuf:"bytes,4,opt,name=serviceApi"`
+	Body       Body       `json:"body" protobuf:"bytes,1,opt,name=body"`
+	ServiceAPI ServiceAPI `json:"serviceApi" protobuf:"bytes,2,opt,name=serviceApi"`
 }
 
 type Content string
@@ -71,16 +69,6 @@ type RunnerInfo struct {
 	Steps      []Step     `json:"steps" protobuf:"bytes,6,opt,name=steps"`
 }
 
-// +Protocol
-// LogStream was the string which was transferred from the abstract Runner when the Runner was running a step.
-// And it would also be sent from the Scheduler to each web dashboard for showing and watching
-type LogStream struct {
-	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	StepName  string    `json:"stepName" protobuf:"bytes,3,opt,name=stepName"`
-	Output    []byte    `json:"output" protobuf:"bytes,4,opt,name=output"`
-}
-
 type ServiceAPI string
 
 const (
@@ -91,6 +79,7 @@ const (
 	RegisterRunner ServiceAPI = "RegisterRunner"
 	UpdateStep     ServiceAPI = "UpdateStep"
 	RunStep        ServiceAPI = "RunStep"
+	LogStream      ServiceAPI = "LogStream"
 	CompleteStep   ServiceAPI = "CompleteStep"
 )
 
@@ -165,4 +154,18 @@ type CompleteStepRequest struct {
 }
 
 type CompleteStepResponse struct {
+}
+
+// +Protocol
+// LogStreamRequest was the string which was transferred from the abstract Runner when the Runner was running a step.
+// And it would also be sent from the Scheduler to each web dashboard for showing and watching
+type LogStreamRequest struct {
+	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
+	StepName   string    `json:"stepName" protobuf:"bytes,4,opt,name=stepName"`
+	Output     []byte    `json:"output" protobuf:"bytes,5,opt,name=output"`
+}
+
+type LogStreamResponse struct {
 }
