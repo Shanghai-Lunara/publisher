@@ -91,6 +91,7 @@ const (
 	RegisterRunner ServiceAPI = "RegisterRunner"
 	UpdateStep     ServiceAPI = "UpdateStep"
 	RunStep        ServiceAPI = "RunStep"
+	CompleteStep   ServiceAPI = "CompleteStep"
 )
 
 type Result struct {
@@ -154,4 +155,14 @@ type UpdateStepRequest struct {
 }
 
 type UpdateStepResponse struct {
+}
+
+type CompleteStepRequest struct {
+	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
+	Step       Step      `json:"step" protobuf:"bytes,4,opt,name=step"`
+}
+
+type CompleteStepResponse struct {
 }

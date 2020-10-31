@@ -20,9 +20,10 @@ const (
 	GroupNameTWSpade   types.GroupName = "tw-spade"
 )
 
-func NewScheduler() *Scheduler {
+func NewScheduler(broadcast chan *broadcast) *Scheduler {
 	s := &Scheduler{
-		items: make(map[types.Namespace]*Groups, 0),
+		items:     make(map[types.Namespace]*Groups, 0),
+		broadcast: broadcast,
 	}
 	s.items[NamespaceHelixSaga] = &Groups{
 		items: make(map[types.GroupName]*Group, 0),
@@ -41,8 +42,9 @@ func NewScheduler() *Scheduler {
 }
 
 type Scheduler struct {
-	mu    sync.Mutex
-	items map[types.Namespace]*Groups
+	mu        sync.Mutex
+	items     map[types.Namespace]*Groups
+	broadcast chan *broadcast
 }
 
 type Groups struct {
@@ -78,6 +80,8 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 		res, err = s.handleRunStep(req.Data)
 	case types.UpdateStep:
 
+	case types.CompleteStep:
+		// CompleteStep must be sent from the Runner in the Scheduler handler.
 	}
 	if err != nil {
 		klog.V(2).Info(err)
@@ -203,14 +207,141 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		ri = t
 	}
 	exist := false
+	newSteps := make([]types.Step, 0)
 	for _, v := range ri.Steps {
 		if v.Name == req.Step.Name {
 			exist = true
-			// todo send to the Runner, and then send to all the dashboard for updating Runner status
+			// todo send to the Runner, and then sync to all dashboards for updating Runner status
+			v.Phase = types.StepRunning
+			step := v.DeepCopy()
+			// run
+			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, step); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+			// sync for updating
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, step); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
 		}
+		if exist {
+			v.Phase = types.StepPending
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+		}
+		newSteps = append(newSteps, v)
 	}
+	ri.Steps = newSteps
 	if !exist {
 		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
 	}
 	return res, nil
+}
+
+func (s *Scheduler) handleCompleteStep(data []byte) (res []byte, err error) {
+	req := &types.RunStepRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	var g *Group
+	if g, err = s.getGroup(req.Namespace, req.GroupName); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	s.mu.Lock()
+	var ri *types.RunnerInfo
+	if t, ok := g.Runners[req.RunnerName]; !ok {
+		s.mu.Unlock()
+		return nil, fmt.Errorf(ErrRunnerWasNotExisted, req.Namespace, req.GroupName, req.RunnerName)
+	} else {
+		s.mu.Unlock()
+		ri = t
+	}
+	exist := false
+	newSteps := make([]types.Step, 0)
+	for _, v := range ri.Steps {
+		if v.Name == req.Step.Name {
+			exist = true
+			// todo send to the Runner, and then sync to all dashboards for updating Runner status
+			v = req.Step
+			// sync for updating
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+		}
+		if exist {
+			// todo check Step Policy for automatic running
+		}
+		newSteps = append(newSteps, v)
+	}
+	ri.Steps = newSteps
+	if !exist {
+		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
+	}
+	return res, nil
+}
+
+func (s *Scheduler) runStepToRunner(namespace types.Namespace, groupName types.GroupName, runnerName string, step *types.Step) (err error) {
+	req1 := &types.RunStepRequest{
+		Namespace:  namespace,
+		GroupName:  groupName,
+		RunnerName: runnerName,
+		Step:       *step,
+	}
+	data1, err := req1.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	req2 := &types.Request{
+		Type: types.Type{
+			ServiceAPI: types.RunStep,
+		},
+		Data: data1,
+	}
+	data2, err := req2.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	s.broadcast <- &broadcast{
+		runnerName: runnerName,
+		msg:        data2,
+	}
+	return nil
+}
+
+func (s *Scheduler) updateStepToDashboard(namespace types.Namespace, groupName types.GroupName, runnerName string, step *types.Step) (err error) {
+	req := &types.UpdateStepRequest{
+		Namespace:  namespace,
+		GroupName:  groupName,
+		RunnerName: runnerName,
+		Step:       *step,
+	}
+	data, err := req.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	req2 := &types.Request{
+		Type: types.Type{
+			ServiceAPI: types.UpdateStep,
+		},
+		Data: data,
+	}
+	data2, err := req2.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return err
+	}
+	s.broadcast <- &broadcast{
+		runnerName: "",
+		msg:        data2,
+	}
+	return nil
 }

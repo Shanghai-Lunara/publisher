@@ -24,6 +24,19 @@ package github.com.nevercase.publisher.pkg.types;
 // Package-wide variables from generator "generated".
 option go_package = "types";
 
+message CompleteStepRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string runnerName = 3;
+
+  optional Step step = 4;
+}
+
+message CompleteStepResponse {
+}
+
 message Group {
   repeated Task tasks = 1;
 

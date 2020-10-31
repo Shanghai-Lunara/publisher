@@ -2,13 +2,13 @@ package scheduler
 
 import (
 	"context"
-	"github.com/nevercase/publisher/pkg/types"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
 )
 
@@ -28,39 +28,62 @@ func NewConnections(ctx context.Context) *connections {
 	cs := &connections{
 		autoIncrementId: 0,
 		items:           make(map[int32]*conn, 0),
-		broadcast:       make(chan []byte, 1024),
+		broadcast:       make(chan *broadcast, 1024),
 		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
+	cs.scheduler = NewScheduler(cs.broadcast)
 	go cs.remove()
 	go cs.broadcastToDashboard()
 	return cs
 }
 
 type connections struct {
-	mu              sync.Mutex
+	mu              sync.RWMutex
 	autoIncrementId int32
 	items           map[int32]*conn
-	broadcast       chan []byte
+	broadcast       chan *broadcast
 	removedChan     chan int32
 	scheduler       *Scheduler
 	ctx             context.Context
 }
 
+type broadcast struct {
+	runnerName string
+	msg        []byte
+}
+
 func (cs *connections) broadcastToDashboard() {
 	for {
 		select {
-		case msg, isClose := <-cs.broadcast:
+		case broadcast, isClose := <-cs.broadcast:
 			if !isClose {
 				return
 			}
-			cs.mu.Lock()
-			for _, v := range cs.items {
-				if v.body == types.BodyDashboard {
-					v.writeChan <- msg
-				}
+			if broadcast.runnerName == "" {
+
+			} else {
+
 			}
-			cs.mu.Unlock()
+			switch broadcast.runnerName {
+			case "":
+				// if the runnerName was empty string that shows the broadcast should be sent to all dashboards
+				cs.mu.RLock()
+				for _, v := range cs.items {
+					if v.body == types.BodyDashboard {
+						v.writeChan <- broadcast.msg
+					}
+				}
+				cs.mu.RUnlock()
+			default:
+				cs.mu.RLock()
+				for _, v := range cs.items {
+					if v.body == types.BodyDashboard {
+
+					}
+				}
+				cs.mu.RUnlock()
+			}
 		case <-cs.ctx.Done():
 			return
 		}
