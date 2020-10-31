@@ -1,6 +1,10 @@
 package types
 
 const (
+	// ws
+	WebsocketHandlerRunner    = "/runner"
+	WebsocketHandlerDashboard = "/dashboard"
+
 	PublisherProjectDir = "PUBLISHER_PROJECT_DIR"
 	// git config
 	PublisherGitBranch = "PUBLISHER_GIT_BRANCH"

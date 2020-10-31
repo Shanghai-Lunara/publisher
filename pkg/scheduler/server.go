@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
 	"net"
 	"net/http"
@@ -13,8 +14,8 @@ type Server struct {
 
 func (s *Server) initWSServer(addr string) {
 	klog.Info("initWSService")
-	http.HandleFunc("/runner", s.connections.handlerRunner)
-	http.HandleFunc("/dashboard", s.connections.handlerDashboard)
+	http.HandleFunc(types.WebsocketHandlerRunner, s.connections.handlerRunner)
+	http.HandleFunc(types.WebsocketHandlerDashboard, s.connections.handlerDashboard)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		klog.Fatal(err)
