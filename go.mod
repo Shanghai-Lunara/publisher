@@ -7,6 +7,7 @@ require (
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/gorilla/websocket v1.4.2
+	github.com/nevercase/k8s-controller-custom-resource v0.0.0-20201030040518-9e28262ecbf4
 	github.com/satori/go.uuid v1.2.0 // indirect
 	k8s.io/klog v1.0.0
 )

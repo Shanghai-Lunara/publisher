@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"k8s.io/klog"
 	"net"
 	"net/http"
@@ -19,4 +20,16 @@ func (s *Server) initWSServer(addr string) {
 		klog.Fatal(err)
 	}
 	klog.Fatal(http.Serve(l, nil))
+}
+
+func (s *Server) Close() {
+
+}
+
+func NewServer(addr string) *Server {
+	s := &Server{
+		connections: NewConnections(context.Background()),
+	}
+	go s.initWSServer(addr)
+	return s
 }
