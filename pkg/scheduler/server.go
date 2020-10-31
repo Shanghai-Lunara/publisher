@@ -12,7 +12,8 @@ type Server struct {
 
 func (s *Server) initWSServer(addr string) {
 	klog.Info("initWSService")
-	http.HandleFunc("/", s.connections.handler)
+	http.HandleFunc("/runner", s.connections.handlerRunner)
+	http.HandleFunc("/dashboard", s.connections.handlerDashboard)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		klog.Fatal(err)

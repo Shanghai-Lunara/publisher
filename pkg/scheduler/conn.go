@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"github.com/nevercase/publisher/pkg/types"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -24,21 +25,46 @@ var upGrader = websocket.Upgrader{
 }
 
 func NewConnections(ctx context.Context) *connections {
-	return &connections{
+	cs := &connections{
 		autoIncrementId: 0,
 		items:           make(map[int32]*conn, 0),
+		broadcast:       make(chan []byte, 1024),
 		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
+	go cs.remove()
+	go cs.broadcastToDashboard()
+	return cs
 }
 
 type connections struct {
 	mu              sync.Mutex
 	autoIncrementId int32
 	items           map[int32]*conn
+	broadcast       chan []byte
 	removedChan     chan int32
 	scheduler       *Scheduler
 	ctx             context.Context
+}
+
+func (cs *connections) broadcastToDashboard() {
+	for {
+		select {
+		case msg, isClose := <-cs.broadcast:
+			if !isClose {
+				return
+			}
+			cs.mu.Lock()
+			for _, v := range cs.items {
+				if v.body == types.BodyDashboard {
+					v.writeChan <- msg
+				}
+			}
+			cs.mu.Unlock()
+		case <-cs.ctx.Done():
+			return
+		}
+	}
 }
 
 func (cs *connections) remove() {
@@ -57,8 +83,8 @@ func (cs *connections) remove() {
 	}
 }
 
-func (cs *connections) handler(w http.ResponseWriter, r *http.Request) {
-	c, err := cs.newConn(w, r)
+func (cs *connections) handlerDashboard(w http.ResponseWriter, r *http.Request) {
+	c, err := cs.newConn(w, r, types.BodyDashboard)
 	if err != nil {
 		klog.V(2).Info(err)
 		return
@@ -68,7 +94,18 @@ func (cs *connections) handler(w http.ResponseWriter, r *http.Request) {
 	cs.items[c.id] = c
 }
 
-func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, error) {
+func (cs *connections) handlerRunner(w http.ResponseWriter, r *http.Request) {
+	c, err := cs.newConn(w, r, types.BodyRunner)
+	if err != nil {
+		klog.V(2).Info(err)
+		return
+	}
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.items[c.id] = c
+}
+
+func (cs *connections) newConn(w http.ResponseWriter, r *http.Request, body types.Body) (*conn, error) {
 	client, err := upGrader.Upgrade(w, r, nil)
 	if err != nil {
 		klog.V(2).Info(err)
@@ -77,6 +114,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 	ctx, cancel := context.WithCancel(cs.ctx)
 	c := &conn{
 		scheduler:             cs.scheduler,
+		body:                  body,
 		id:                    atomic.AddInt32(&cs.autoIncrementId, 1),
 		conn:                  client,
 		writeChan:             make(chan []byte, 4096),
@@ -96,6 +134,7 @@ func (cs *connections) newConn(w http.ResponseWriter, r *http.Request) (*conn, e
 // conn was an abstract runner or a web dashboard client
 type conn struct {
 	scheduler             *Scheduler
+	body                  types.Body
 	id                    int32
 	conn                  *websocket.Conn
 	writeChan             chan []byte
@@ -144,7 +183,9 @@ func (c *conn) readPump() {
 		if err != nil {
 			return
 		}
-		c.writeChan <- res
+		if len(res) > 0 {
+			c.writeChan <- res
+		}
 	}
 }
 

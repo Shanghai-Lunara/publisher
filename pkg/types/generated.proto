@@ -72,6 +72,12 @@ message LogStream {
   optional bytes output = 4;
 }
 
+message PingRequest {
+}
+
+message PongResponse {
+}
+
 message RegisterRunnerRequest {
   optional RunnerInfo runnerInfo = 1;
 }
@@ -101,6 +107,19 @@ message Response {
 
 message Result {
   repeated string items = 1;
+}
+
+message RunStepRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string runnerName = 3;
+
+  optional Step step = 4;
+}
+
+message RunStepResponse {
 }
 
 // +Protocol
@@ -167,6 +186,19 @@ message Type {
   optional string body = 3;
 
   optional string serviceApi = 4;
+}
+
+message UpdateStepRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string runnerName = 3;
+
+  optional Step step = 4;
+}
+
+message UpdateStepResponse {
 }
 
 message UploadFile {

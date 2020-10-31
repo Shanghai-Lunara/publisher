@@ -61,12 +61,23 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 		return res, err
 	}
 	switch req.Type.ServiceAPI {
+	case types.Ping:
+		res, err = s.handlePing(req.Data)
 	case types.ListNamespace:
 		res, err = s.handleListNamespaces(req.Data)
 	case types.ListGroupName:
 		res, err = s.handleListGroupNames(req.Data)
 	case types.ListTask:
 		res, err = s.handleListTasks(req.Data)
+	case types.RegisterRunner:
+		res, err = s.handleRegisterRunner(req.Data)
+	case types.RunStep:
+		// RunStep must be sent from the Dashboard in the Scheduler handler.
+		// And then the command would be transmitted to the specific Runner.
+		// At the same time, the Runner status would be changed and synced to all dashboards.
+		res, err = s.handleRunStep(req.Data)
+	case types.UpdateStep:
+
 	}
 	if err != nil {
 		klog.V(2).Info(err)
@@ -80,6 +91,11 @@ func (s *Scheduler) handle(message []byte) (res []byte, err error) {
 		Data:    res,
 	}
 	return result.Marshal()
+}
+
+func (s *Scheduler) handlePing(data []byte) (res []byte, err error) {
+	t := &types.PongResponse{}
+	return t.Marshal()
 }
 
 func (s *Scheduler) handleListNamespaces(data []byte) (res []byte, err error) {
@@ -140,14 +156,18 @@ func (s *Scheduler) handleRegisterRunner(data []byte) (res []byte, err error) {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	g.Runners[req.RunnerInfo.Name] = &req.RunnerInfo
+	if _, ok := g.Runners[req.RunnerInfo.Name]; !ok {
+		g.Runners[req.RunnerInfo.Name] = &req.RunnerInfo
+	}
 	result := &types.RegisterRunnerResponse{}
 	return result.Marshal()
 }
 
 const (
 	ErrNamespaceWasNotExisted = "error: namespace:%s was not existed"
-	ErrGroupNameWasNotExisted = "error: namespace:%s groupName:%s was not existed"
+	ErrGroupWasNotExisted     = "error: namespace:%s groupName:%s was not existed"
+	ErrRunnerWasNotExisted    = "error: namespace:%s groupName:%s runner:%s was not existed"
+	ErrStepWasNotExisted      = "error: namespace:%s groupName:%s runner:%s step:%s was not existed"
 )
 
 func (s *Scheduler) getGroup(namespace types.Namespace, groupName types.GroupName) (*Group, error) {
@@ -155,9 +175,42 @@ func (s *Scheduler) getGroup(namespace types.Namespace, groupName types.GroupNam
 		if t2, ok := t.items[groupName]; ok {
 			return t2, nil
 		} else {
-			return nil, fmt.Errorf(ErrGroupNameWasNotExisted, namespace, groupName)
+			return nil, fmt.Errorf(ErrGroupWasNotExisted, namespace, groupName)
 		}
 	} else {
 		return nil, fmt.Errorf(ErrNamespaceWasNotExisted, namespace)
 	}
+}
+
+func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
+	req := &types.RunStepRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	var g *Group
+	if g, err = s.getGroup(req.Namespace, req.GroupName); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	s.mu.Lock()
+	var ri *types.RunnerInfo
+	if t, ok := g.Runners[req.RunnerName]; !ok {
+		s.mu.Unlock()
+		return nil, fmt.Errorf(ErrRunnerWasNotExisted, req.Namespace, req.GroupName, req.RunnerName)
+	} else {
+		s.mu.Unlock()
+		ri = t
+	}
+	exist := false
+	for _, v := range ri.Steps {
+		if v.Name == req.Step.Name {
+			exist = true
+			// todo send to the Runner, and then send to all the dashboard for updating Runner status
+		}
+	}
+	if !exist {
+		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
+	}
+	return res, nil
 }

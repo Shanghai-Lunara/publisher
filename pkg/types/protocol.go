@@ -84,6 +84,7 @@ type LogStream struct {
 type ServiceAPI string
 
 const (
+	Ping           ServiceAPI = "Ping"
 	ListNamespace  ServiceAPI = "ListNamespace"
 	ListGroupName  ServiceAPI = "ListGroupName"
 	ListTask       ServiceAPI = "ListTask"
@@ -94,6 +95,12 @@ const (
 
 type Result struct {
 	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
+}
+
+type PingRequest struct {
+}
+
+type PongResponse struct {
 }
 
 type ListNamespaceRequest struct {
@@ -127,4 +134,24 @@ type RegisterRunnerRequest struct {
 }
 
 type RegisterRunnerResponse struct {
+}
+
+type RunStepRequest struct {
+	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
+	Step       Step      `json:"step" protobuf:"bytes,4,opt,name=step"`
+}
+
+type RunStepResponse struct {
+}
+
+type UpdateStepRequest struct {
+	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
+	Step       Step      `json:"step" protobuf:"bytes,4,opt,name=step"`
+}
+
+type UpdateStepResponse struct {
 }
