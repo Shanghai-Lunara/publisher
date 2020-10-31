@@ -81,6 +81,13 @@ func (cs *connections) broadcastToDashboard() {
 				}
 				cs.mu.RUnlock()
 			case broadcastTypePing:
+				cs.mu.RLock()
+				if t, ok := cs.items[broadcast.clientId]; ok {
+					t.ping()
+				} else {
+					// todo handle err
+				}
+				cs.mu.RUnlock()
 			case broadcastTypeDashboard:
 				cs.mu.RLock()
 				for _, v := range cs.items {
@@ -92,8 +99,8 @@ func (cs *connections) broadcastToDashboard() {
 			case broadcastTypeRunner:
 				cs.mu.RLock()
 				for _, v := range cs.items {
-					if v.body == types.BodyDashboard {
-
+					if v.runnerName == broadcast.runnerName {
+						v.writeChan <- broadcast.msg
 					}
 				}
 				cs.mu.RUnlock()
