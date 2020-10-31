@@ -44,7 +44,7 @@ func NewScheduler(broadcast chan *broadcast) *Scheduler {
 type Scheduler struct {
 	mu        sync.Mutex
 	items     map[types.Namespace]*Groups
-	broadcast chan *broadcast
+	broadcast chan<- *broadcast
 }
 
 type Groups struct {
