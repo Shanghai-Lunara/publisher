@@ -164,7 +164,7 @@ type LogStreamRequest struct {
 	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
 	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
 	StepName   string    `json:"stepName" protobuf:"bytes,4,opt,name=stepName"`
-	Output     []byte    `json:"output" protobuf:"bytes,5,opt,name=output"`
+	Output     string    `json:"output" protobuf:"bytes,5,opt,name=output"`
 }
 
 type LogStreamResponse struct {

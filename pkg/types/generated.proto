@@ -84,7 +84,7 @@ message LogStreamRequest {
 
   optional string stepName = 4;
 
-  optional bytes output = 5;
+  optional string output = 5;
 }
 
 message LogStreamResponse {

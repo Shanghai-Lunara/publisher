@@ -11,15 +11,17 @@ import (
 )
 
 type client struct {
-	conn      *websocket.Conn
-	writeChan chan []byte
-	runner    *Runner
-	pingTimer bool
-	ctx       context.Context
-	cancel    context.CancelFunc
+	conn         *websocket.Conn
+	writeChan    chan []byte
+	runner       *Runner
+	streamOutput chan string
+	pingTimer    bool
+	currentStep  *types.Step
+	ctx          context.Context
+	cancel       context.CancelFunc
 }
 
-func NewClient(addr string) (*client, error) {
+func NewClient(addr string, r *Runner) (*client, error) {
 	u := url.URL{Scheme: "ws", Host: addr, Path: types.WebsocketHandlerRunner}
 	klog.Info("url:", u)
 	a, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -29,14 +31,18 @@ func NewClient(addr string) (*client, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &client{
-		conn:      a,
-		writeChan: make(chan []byte, 1024),
-		pingTimer: false,
-		ctx:       ctx,
-		cancel:    cancel,
+		conn:         a,
+		writeChan:    make(chan []byte, 1024),
+		runner:       r,
+		streamOutput: make(chan string, 4096),
+		pingTimer:    false,
+		ctx:          ctx,
+		cancel:       cancel,
 	}
+	c.runner.StreamOutput = c.streamOutput
 	go c.readPump()
 	go c.writePump()
+	go c.logStream()
 	c.register()
 	return c, nil
 }
@@ -118,6 +124,7 @@ func (c *client) readPump() {
 			if err = data.Unmarshal(req.Data); err != nil {
 				klog.Fatal(err)
 			}
+			c.currentStep = &data.Step
 			if err = c.runner.Run(&data.Step); err != nil {
 				klog.V(2).Info(err)
 				// todo catching error, update Step's Messages, and report to Scheduler
@@ -151,6 +158,40 @@ func (c *client) writePump() {
 			}
 		case <-c.ctx.Done():
 			return
+		}
+	}
+}
+
+func (c *client) logStream() {
+	for {
+		select {
+		case log, isClose := <-c.streamOutput:
+			if !isClose {
+				return
+			}
+			req1 := &types.LogStreamRequest{
+				Namespace:  c.runner.Namespace,
+				GroupName:  c.runner.GroupName,
+				RunnerName: c.runner.Name,
+				StepName:   c.currentStep.Name,
+				Output:     log,
+			}
+			data, err := req1.Marshal()
+			if err != nil {
+				klog.Fatal(err)
+			}
+			req2 := &types.Request{
+				Type: types.Type{
+					Body:       types.BodyRunner,
+					ServiceAPI: types.LogStream,
+				},
+				Data: data,
+			}
+			data, err = req2.Marshal()
+			if err != nil {
+				klog.Fatal(err)
+			}
+			c.writeChan <- data
 		}
 	}
 }
