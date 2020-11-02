@@ -18,7 +18,23 @@ type Runner struct {
 	GroupName     string                    `json:"groupName" protobuf:"bytes,4,opt,name=groupName"`
 	StepOperators []interfaces.StepOperator `json:"stepOperators" protobuf:"bytes,5,opt,name=stepOperators"`
 	// StreamOutput was a chan<- string which was used to transfer exec outputs by the stream.
-	StreamOutput  chan<- string             `json:"streamOutput"`
+	StreamOutput chan<- string `json:"streamOutput"`
+}
+
+func (r *Runner) Register() (res types.RunnerInfo, err error) {
+	steps := make([]types.Step, 0)
+	for _, v := range r.StepOperators {
+		steps = append(steps, *v.Step())
+	}
+	res = types.RunnerInfo{
+		Name:       r.Name,
+		Hostname:   r.Hostname,
+		Namespace:  types.Namespace(r.Namespace),
+		GroupName:  types.GroupName(r.GroupName),
+		RunnerType: types.RunnerTypeServer,
+		Steps:      steps,
+	}
+	return res, nil
 }
 
 func (r *Runner) Run(s *types.Step) (err error) {

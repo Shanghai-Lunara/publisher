@@ -13,6 +13,8 @@ import (
 type client struct {
 	conn      *websocket.Conn
 	writeChan chan []byte
+	runner    *Runner
+	pingTimer bool
 	ctx       context.Context
 	cancel    context.CancelFunc
 }
@@ -22,25 +24,31 @@ func NewClient(addr string) (*client, error) {
 	klog.Info("url:", u)
 	a, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		klog.V(2).Info(err)
+		klog.Fatal(err)
 		return nil, err
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &client{
 		conn:      a,
 		writeChan: make(chan []byte, 1024),
+		pingTimer: false,
 		ctx:       ctx,
 		cancel:    cancel,
 	}
 	go c.readPump()
 	go c.writePump()
 	c.register()
-	go c.ping()
 	return c, nil
 }
 
 func (c *client) register() {
-	req1 := &types.RegisterRunnerRequest{}
+	ri, err := c.runner.Register()
+	if err != nil {
+		klog.Fatal(err)
+	}
+	req1 := &types.RegisterRunnerRequest{
+		RunnerInfo: ri,
+	}
 	data, err := req1.Marshal()
 	if err != nil {
 		klog.Fatal(err)
@@ -92,6 +100,40 @@ func (c *client) readPump() {
 		if err != nil {
 			klog.Fatal(err)
 			return
+		}
+		req := &types.Request{}
+		if err := req.Unmarshal(message); err != nil {
+			klog.Fatal(err)
+			return
+		}
+		var res []byte
+		switch req.Type.ServiceAPI {
+		case types.RegisterRunner:
+			if c.pingTimer == false {
+				go c.ping()
+			}
+		case types.Ping:
+		case types.RunStep:
+			data := &types.RunStepRequest{}
+			if err = data.Unmarshal(req.Data); err != nil {
+				klog.Fatal(err)
+			}
+			if err = c.runner.Run(&data.Step); err != nil {
+				klog.V(2).Info(err)
+				// todo catching error, update Step's Messages, and report to Scheduler
+			}
+		case types.UpdateStep:
+			data := &types.UpdateStepRequest{}
+			if err = data.Unmarshal(req.Data); err != nil {
+				klog.Fatal(err)
+			}
+			if err = c.runner.Update(&data.Step); err != nil {
+				klog.V(2).Info(err)
+				// todo catching error, update Step's Messages, and report to Scheduler
+			}
+		}
+		if len(res) > 0 {
+			c.writeChan <- res
 		}
 	}
 }
