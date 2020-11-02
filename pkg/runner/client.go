@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 type Client struct {
 	conn         *websocket.Conn
 	writeChan    chan []byte
@@ -22,7 +21,7 @@ type Client struct {
 	cancel       context.CancelFunc
 }
 
-func NewClient(addr string, r *Runner) (*Client, error) {
+func NewClient(addr string, streamOutput chan string, r *Runner) (*Client, error) {
 	u := url.URL{Scheme: "ws", Host: addr, Path: types.WebsocketHandlerRunner}
 	klog.Info("url:", u)
 	a, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -35,7 +34,7 @@ func NewClient(addr string, r *Runner) (*Client, error) {
 		conn:         a,
 		writeChan:    make(chan []byte, 1024),
 		runner:       r,
-		streamOutput: make(chan string, 4096),
+		streamOutput: streamOutput,
 		pingTimer:    false,
 		ctx:          ctx,
 		cancel:       cancel,
