@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-type client struct {
+
+type Client struct {
 	conn         *websocket.Conn
 	writeChan    chan []byte
 	runner       *Runner
@@ -21,7 +22,7 @@ type client struct {
 	cancel       context.CancelFunc
 }
 
-func NewClient(addr string, r *Runner) (*client, error) {
+func NewClient(addr string, r *Runner) (*Client, error) {
 	u := url.URL{Scheme: "ws", Host: addr, Path: types.WebsocketHandlerRunner}
 	klog.Info("url:", u)
 	a, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -30,7 +31,7 @@ func NewClient(addr string, r *Runner) (*client, error) {
 		return nil, err
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	c := &client{
+	c := &Client{
 		conn:         a,
 		writeChan:    make(chan []byte, 1024),
 		runner:       r,
@@ -47,7 +48,7 @@ func NewClient(addr string, r *Runner) (*client, error) {
 	return c, nil
 }
 
-func (c *client) register() {
+func (c *Client) register() {
 	ri, err := c.runner.Register()
 	if err != nil {
 		klog.Fatal(err)
@@ -73,7 +74,7 @@ func (c *client) register() {
 	c.writeChan <- data2
 }
 
-func (c *client) ping() {
+func (c *Client) ping() {
 	tick := time.NewTicker(time.Second * time.Duration(scheduler.WebsocketConnectionTimeout/2))
 	defer tick.Stop()
 	for {
@@ -99,7 +100,7 @@ func (c *client) ping() {
 	}
 }
 
-func (c *client) readPump() {
+func (c *Client) readPump() {
 	for {
 		messageType, message, err := c.conn.ReadMessage()
 		klog.Infof("messageType: %d message: %s err:%v\n", messageType, string(message), err)
@@ -145,7 +146,7 @@ func (c *client) readPump() {
 	}
 }
 
-func (c *client) writePump() {
+func (c *Client) writePump() {
 	for {
 		select {
 		case msg, isClose := <-c.writeChan:
@@ -162,7 +163,7 @@ func (c *client) writePump() {
 	}
 }
 
-func (c *client) logStream() {
+func (c *Client) logStream() {
 	for {
 		select {
 		case log, isClose := <-c.streamOutput:
