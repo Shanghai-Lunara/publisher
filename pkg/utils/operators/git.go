@@ -44,6 +44,9 @@ func (g *git) Update(s *types.Step) {
 	g.step = s.DeepCopy()
 }
 
+func (g *git) Prepare() {
+}
+
 func (g *git) Run(output chan<- string) (res []string, err error) {
 	g.output = output
 	g.step.Phase = types.StepRunning

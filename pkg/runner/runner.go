@@ -42,6 +42,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 	for _, v := range r.StepOperators {
 		if v.Step().Name == s.Name {
 			exist = true
+			v.Prepare()
 			res, err := v.Run(r.StreamOutput)
 			if err != nil {
 				klog.V(2).Info(err)
