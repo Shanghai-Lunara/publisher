@@ -83,7 +83,7 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		// CompleteStep must be sent from the Runner in the Scheduler handler.
 		res, err = s.handleCompleteStep(req.Data)
 	case types.LogStream:
-		// CompleteStep must be sent from the Runner in the Scheduler handler.
+		// LogStream must be sent from the Runner in the Scheduler handler.
 		// The output should be inserted into mysql, and sent to all dashboard at the same time
 		res, err = s.handleLogStream(req.Data)
 	}
@@ -92,11 +92,9 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		//todo handle error
 		return nil, err
 	}
-	result := &types.Response{
-		Code:    0,
-		Message: "",
-		Type:    req.Type,
-		Data:    res,
+	result := &types.Request{
+		Type: req.Type,
+		Data: res,
 	}
 	return result.Marshal()
 }
