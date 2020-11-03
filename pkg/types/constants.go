@@ -17,4 +17,14 @@ const (
 	PublisherFtpWorkDir  = "ftp_work_dir"
 	PublisherFtpTimeout  = "ftp_timeout"
 	PublisherFtpMkdir    = "PUBLISHER_FTP_MKDIR"
+
+	// svn config
+	PublisherSvnHost          = "svn_host"
+	PublisherSvnPort          = "svn_port"
+	PublisherSvnUsername      = "svn_username"
+	PublisherSvnPassword      = "svn_password"
+	PublisherSvnRemoteDir     = "svn_remote_dir"
+	PublisherSvnWorkDir       = "svn_work_dir"
+	PublisherSvnCommitMessage = "svn_commit_message"
+	PublisherSvnCommand       = "svn_command"
 )

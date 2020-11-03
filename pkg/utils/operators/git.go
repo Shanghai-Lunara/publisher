@@ -1,11 +1,7 @@
 package operators
 
 import (
-	"bufio"
-	"context"
 	"fmt"
-	"io"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -73,12 +69,12 @@ func (g *git) Run(output chan<- string) (res []string, err error) {
 
 func (g *git) cd() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s", g.step.Envs[types.PublisherProjectDir])
-	return g.exec(commands)
+	return DefaultExec(commands)
 }
 
 func (g *git) branch() (res string, err error) {
 	commands := fmt.Sprintf("cd %s && git branch -a | grep '*'", g.step.Envs[types.PublisherProjectDir])
-	t, err := g.exec(commands)
+	t, err := DefaultExec(commands)
 	if err != nil {
 		klog.V(2).Info(err)
 		return res, err
@@ -100,57 +96,27 @@ func (g *git) branch() (res string, err error) {
 
 func (g *git) fetchAll() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && git fetch --all && git fetch -p", g.step.Envs[types.PublisherProjectDir])
-	return g.execWithStreamOutput(commands)
+	return ExecWithStreamOutput(commands, g.output)
 }
 
 func (g *git) revert() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && git add --all && git checkout -f && git reset --hard", g.step.Envs[types.PublisherProjectDir])
-	return g.execWithStreamOutput(commands)
+	return ExecWithStreamOutput(commands, g.output)
 }
 
 func (g *git) checkout() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && git checkout -B %s --track remotes/origin/%s",
 		g.step.Envs[types.PublisherProjectDir], g.step.Envs[types.PublisherGitBranch], g.step.Envs[types.PublisherGitBranch])
 	klog.Info("git checkout commands:", commands)
-	return g.execWithStreamOutput(commands)
+	return ExecWithStreamOutput(commands, g.output)
 }
 
 func (g *git) pull() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && git pull", g.step.Envs[types.PublisherProjectDir])
-	return g.execWithStreamOutput(commands)
+	return ExecWithStreamOutput(commands, g.output)
 }
 
 func (g *git) push() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && git push", g.step.Envs[types.PublisherProjectDir])
-	return g.execWithStreamOutput(commands)
-}
-
-func (g *git) exec(commands string) (res []byte, err error) {
-	return exec.CommandContext(context.Background(), "sh", "-c", commands).Output()
-}
-
-func (g *git) execWithStreamOutput(commands string) (res []byte, err error) {
-	//return exec.CommandContext(context.Background(), "sh", "-c", commands).Output()
-	cmd := exec.CommandContext(context.Background(), "sh", "-c", commands)
-	var stdout io.ReadCloser
-	if stdout, err = cmd.StdoutPipe(); err != nil {
-		klog.V(2).Info(err)
-		return res, err
-	}
-	if err = cmd.Start(); err != nil {
-		klog.V(2).Info(err)
-		return res, err
-	}
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		m := scanner.Text()
-		g.output <- m
-		fmt.Println(m)
-	}
-	if err = cmd.Wait(); err != nil {
-		klog.V(2).Info(err)
-		return res, err
-	}
-	return res, nil
+	return ExecWithStreamOutput(commands, g.output)
 }
