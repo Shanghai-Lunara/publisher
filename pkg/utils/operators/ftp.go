@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/Shanghai-Lunara/go-gpt/pkg/operator"
-	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
 )
 
-func NewFtp(host string, port int, username, password, workDir string, timeout int) interfaces.StepOperator {
+func NewFtp(host string, port int, username, password, workDir string, timeout int) *ftp {
 	envs := make(map[string]string, 0)
 	envs[types.PublisherFtpHost] = host
 	envs[types.PublisherFtpPort] = fmt.Sprintf("%d", port)
@@ -35,10 +34,12 @@ const (
 	FtpMkdirMark = "mark"
 )
 
+// ftp implements github.com/nevercase/publisher/pkg/interfaces.StepOperator
 type ftp struct {
-	config   *operator.FtpConfig
-	operator operator.FtpOperator
-	step     *types.Step
+	config      *operator.FtpConfig
+	operator    operator.FtpOperator
+	step        *types.Step
+	prepareFunc func()
 }
 
 func (f *ftp) Step() *types.Step {
@@ -49,7 +50,12 @@ func (f *ftp) Update(s *types.Step) {
 	f.step = s.DeepCopy()
 }
 
+func (f *ftp) SettingPrepareFunc(fc func()) {
+	f.prepareFunc = fc
+}
+
 func (f *ftp) Prepare() {
+	f.prepareFunc()
 }
 
 func (f *ftp) Run(output chan<- string) (res []string, err error) {
