@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	"time"
+)
+
 const (
 	// ws
 	WebsocketHandlerRunner    = "/runner"
@@ -28,3 +33,11 @@ const (
 	PublisherSvnCommitMessage = "svn_commit_message"
 	PublisherSvnCommand       = "svn_command"
 )
+
+const (
+	StepMessageFormat = "[%s] StepName: [%s] Message: [%s] is starting"
+)
+
+func StepMessage(stepName, action string) string {
+	return fmt.Sprintf(StepMessageFormat, time.Now().Format("2006-01-02 15:04:05"), stepName, action)
+}

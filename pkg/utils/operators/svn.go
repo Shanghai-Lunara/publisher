@@ -49,7 +49,17 @@ func (s *svn) Prepare() {
 const (
 	SvnCommandWaiting    = "pulling and waiting"
 	SvnCommandCommitting = "adding and committing"
+	SvnCommandCD         = "cd"
+	SvnCommandRevertAll  = "revert all"
+	SvnCommandRemoveAll  = "remove all"
+	SvnCommandCheckout   = "checkout"
+	SvnCommandAddAll     = "add all"
+	SvnCommandCommit     = "commit"
 )
+
+func (s *svn) AppendMessage(action string) {
+	s.step.Messages = append(s.step.Messages, types.StepMessage(s.step.Name, action))
+}
 
 func (s *svn) Run(output chan<- string) (res []string, err error) {
 	s.output = output
@@ -57,24 +67,29 @@ func (s *svn) Run(output chan<- string) (res []string, err error) {
 	var out []byte
 	switch s.step.Envs[types.PublisherSvnCommand] {
 	case SvnCommandWaiting:
+		s.AppendMessage(SvnCommandWaiting)
+		s.AppendMessage(SvnCommandCD)
 		if out, err = s.cd(); err != nil {
 			klog.V(2).Info(err)
 			s.step.Phase = types.StepFailed
 			return res, err
 		}
 		res = append(res, string(out))
+		s.AppendMessage(SvnCommandRevertAll)
 		if out, err = s.revertAll(); err != nil {
 			klog.V(2).Info(err)
 			s.step.Phase = types.StepFailed
 			return res, err
 		}
 		res = append(res, string(out))
+		s.AppendMessage(SvnCommandRemoveAll)
 		if out, err = s.removeAll(); err != nil {
 			klog.V(2).Info(err)
 			s.step.Phase = types.StepFailed
 			return res, err
 		}
 		res = append(res, string(out))
+		s.AppendMessage(SvnCommandCheckout)
 		if out, err = s.checkout(); err != nil {
 			klog.V(2).Info(err)
 			s.step.Phase = types.StepFailed
@@ -82,7 +97,21 @@ func (s *svn) Run(output chan<- string) (res []string, err error) {
 		}
 		res = append(res, string(out))
 	case SvnCommandCommitting:
-
+		s.AppendMessage(SvnCommandCommitting)
+		s.AppendMessage(SvnCommandAddAll)
+		if out, err = s.addAll(); err != nil {
+			klog.V(2).Info(err)
+			s.step.Phase = types.StepFailed
+			return res, err
+		}
+		res = append(res, string(out))
+		s.AppendMessage(SvnCommandCommit)
+		if out, err = s.commit(); err != nil {
+			klog.V(2).Info(err)
+			s.step.Phase = types.StepFailed
+			return res, err
+		}
+		res = append(res, string(out))
 	}
 	s.step.Phase = types.StepSucceeded
 	return res, nil
@@ -141,7 +170,7 @@ func (s *svn) removeAll() (res []byte, err error) {
 }
 
 func (s *svn) commit() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@go-gpt\"",
+	commands := fmt.Sprintf("cd %s | svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@publisher\"",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
