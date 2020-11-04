@@ -125,7 +125,7 @@ func (s *svn) cd() (res []byte, err error) {
 const svnUrl = "svn://%s@%s:%s/%s"
 
 func (s *svn) checkout() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s checkout %s",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s checkout %s",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
@@ -139,7 +139,7 @@ func (s *svn) checkout() (res []byte, err error) {
 }
 
 func (s *svn) addAll() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs svn --username %s --password %s add",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs svn --username %s --password %s add",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
@@ -150,7 +150,7 @@ func (s *svn) addAll() (res []byte, err error) {
 }
 
 func (s *svn) revertAll() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s status | awk '{print $2}' | xargs svn --username %s --password %s revert --depth infinity",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | awk '{print $2}' | xargs svn --username %s --password %s revert --depth infinity",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
@@ -161,7 +161,7 @@ func (s *svn) revertAll() (res []byte, err error) {
 }
 
 func (s *svn) removeAll() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs rm -rf",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs rm -rf",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
@@ -170,7 +170,7 @@ func (s *svn) removeAll() (res []byte, err error) {
 }
 
 func (s *svn) commit() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s | svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@publisher\"",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@publisher\"",
 		s.step.Envs[types.PublisherSvnWorkDir],
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
