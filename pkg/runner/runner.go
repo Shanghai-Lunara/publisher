@@ -49,7 +49,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 				// todo report Run error
 				return err
 			}
-			// todo update Step information
+			// todo update Step information use DeepCopy
 			_ = res
 		}
 	}
@@ -72,4 +72,13 @@ func (r *Runner) Update(s *types.Step) (err error) {
 		return fmt.Errorf(StepOperatorWasNotExisted, s.Name)
 	}
 	return nil
+}
+
+func (r *Runner) Step(s *types.Step) (*types.Step, error) {
+	for _, v := range r.StepOperators {
+		if v.Step().Name == s.Name {
+			return v.Step(), nil
+		}
+	}
+	return nil, fmt.Errorf(StepOperatorWasNotExisted, s.Name)
 }

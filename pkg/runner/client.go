@@ -129,6 +129,9 @@ func (c *Client) readPump() {
 				klog.V(2).Info(err)
 				// todo catching error, update Step's Messages, and report to Scheduler
 			}
+			if err = c.updateStepInformationToScheduler(&data.Step); err != nil {
+				klog.Fatal(err)
+			}
 		case types.UpdateStep:
 			data := &types.UpdateStepRequest{}
 			if err = data.Unmarshal(req.Data); err != nil {
@@ -194,4 +197,34 @@ func (c *Client) logStream() {
 			c.writeChan <- data
 		}
 	}
+}
+
+func (c *Client) updateStepInformationToScheduler(s *types.Step) (err error) {
+	s, err = c.runner.Step(s)
+	if err != nil {
+		klog.Fatal(err)
+	}
+	req1 := &types.UpdateStepRequest{
+		Namespace:  c.runner.Namespace,
+		GroupName:  c.runner.GroupName,
+		RunnerName: c.runner.Name,
+		Step:       *s,
+	}
+	data, err := req1.Marshal()
+	if err != nil {
+		klog.Fatal(err)
+	}
+	req2 := &types.Request{
+		Type: types.Type{
+			Body:       types.BodyRunner,
+			ServiceAPI: types.UpdateStep,
+		},
+		Data: data,
+	}
+	data, err = req2.Marshal()
+	if err != nil {
+		klog.Fatal(err)
+	}
+	c.writeChan <- data
+	return nil
 }

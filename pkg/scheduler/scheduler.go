@@ -79,6 +79,7 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		// At the same time, the Runner status would be changed and synced to all dashboards.
 		res, err = s.handleRunStep(req.Data)
 	case types.UpdateStep:
+		res, err = s.handleUpdateStep(req.Data, req.Type.Body)
 	case types.CompleteStep:
 		// CompleteStep must be sent from the Runner in the Scheduler handler.
 		res, err = s.handleCompleteStep(req.Data)
@@ -245,6 +246,50 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 				klog.V(2).Info(err)
 				return nil, err
 			}
+		}
+		newSteps = append(newSteps, v)
+	}
+	ri.Steps = newSteps
+	if !exist {
+		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
+	}
+	return res, nil
+}
+
+func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, err error) {
+	req := &types.RunStepRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	var g *Group
+	if g, err = s.getGroup(req.Namespace, req.GroupName); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	s.mu.Lock()
+	var ri *types.RunnerInfo
+	if t, ok := g.Runners[req.RunnerName]; !ok {
+		s.mu.Unlock()
+		return nil, fmt.Errorf(ErrRunnerWasNotExisted, req.Namespace, req.GroupName, req.RunnerName)
+	} else {
+		s.mu.Unlock()
+		ri = t
+	}
+	exist := false
+	newSteps := make([]types.Step, 0)
+	for _, v := range ri.Steps {
+		if v.Name == req.Step.Name {
+			exist = true
+			v = req.Step
+			// sync for updating
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+		}
+		if exist {
+			// todo check Step Policy for automatic running
 		}
 		newSteps = append(newSteps, v)
 	}
