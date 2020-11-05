@@ -140,7 +140,7 @@ func (s *svn) checkout() (res []byte, err error) {
 
 func (s *svn) addAll() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs svn --username %s --password %s add",
-		s.step.Envs[types.PublisherSvnWorkDir],
+		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
 		s.step.Envs[types.PublisherSvnUsername],
@@ -151,7 +151,7 @@ func (s *svn) addAll() (res []byte, err error) {
 
 func (s *svn) revertAll() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | awk '{print $2}' | xargs svn --username %s --password %s revert --depth infinity",
-		s.step.Envs[types.PublisherSvnWorkDir],
+		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
 		s.step.Envs[types.PublisherSvnUsername],
@@ -162,7 +162,7 @@ func (s *svn) revertAll() (res []byte, err error) {
 
 func (s *svn) removeAll() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && svn --username %s --password %s status | grep ? | awk '{print $2}' | xargs rm -rf",
-		s.step.Envs[types.PublisherSvnWorkDir],
+		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
 	)
@@ -171,7 +171,7 @@ func (s *svn) removeAll() (res []byte, err error) {
 
 func (s *svn) commit() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@publisher\"",
-		s.step.Envs[types.PublisherSvnWorkDir],
+		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
 		s.step.Envs[types.PublisherSvnCommitMessage],
