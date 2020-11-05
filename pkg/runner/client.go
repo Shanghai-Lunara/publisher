@@ -172,6 +172,10 @@ func (c *Client) logStream() {
 			if !isClose {
 				return
 			}
+			if c.currentStep == nil {
+				klog.V(2).Info("Client currentStep was nil")
+				continue
+			}
 			req1 := &types.LogStreamRequest{
 				Namespace:  c.runner.Namespace,
 				GroupName:  c.runner.GroupName,
