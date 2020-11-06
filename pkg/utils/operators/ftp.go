@@ -60,7 +60,7 @@ func (f *ftp) Prepare() {
 
 func (f *ftp) Run(output chan<- string) (res []string, err error) {
 	f.step.Phase = types.StepRunning
-	if err = f.reloadConfig(); err != nil {
+	if err = f.ReloadConfig(); err != nil {
 		klog.V(2).Info(err)
 		f.step.Phase = types.StepFailed
 		return nil, err
@@ -104,7 +104,7 @@ func (f *ftp) Run(output chan<- string) (res []string, err error) {
 	return res, nil
 }
 
-func (f *ftp) reloadConfig() (err error) {
+func (f *ftp) ReloadConfig() (err error) {
 	var port, timeout int
 	if port, err = strconv.Atoi(f.step.Envs[types.PublisherFtpPort]); err != nil {
 		klog.V(2).Info(err)
