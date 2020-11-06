@@ -137,3 +137,7 @@ func (f *ftp) yunLuoMkdir() (dir string, err error) {
 	dir = fmt.Sprintf("%s_%d", date, 1+len(res))
 	return dir, nil
 }
+
+func (f *ftp) Operator() operator.FtpOperator {
+	return f.operator
+}
