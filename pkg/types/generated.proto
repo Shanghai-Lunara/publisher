@@ -58,6 +58,16 @@ message ListNamespaceResponse {
   repeated string items = 1;
 }
 
+message ListRunnerRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+}
+
+message ListRunnerResponse {
+  repeated RunnerInfo runners = 1;
+}
+
 message ListTaskRequest {
   optional string namespace = 1;
 

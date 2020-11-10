@@ -71,6 +71,8 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		res, err = s.handleListGroupNames(req.Data)
 	case types.ListTask:
 		res, err = s.handleListTasks(req.Data)
+	case types.ListRunner:
+		res, err = s.handleListRunners(req.Data)
 	case types.RegisterRunner:
 		res, err = s.handleRegisterRunner(req.Data, clientId)
 	case types.RunStep:
@@ -153,6 +155,26 @@ func (s *Scheduler) handleListTasks(data []byte) (res []byte, err error) {
 		Tasks: make([]types.Task, 0),
 	}
 
+	return result.Marshal()
+}
+
+func (s *Scheduler) handleListRunners(data []byte) (res []byte, err error) {
+	req := &types.ListRunnerRequest{}
+	if err = req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	var g *Group
+	if g, err = s.getGroup(req.Namespace, req.GroupName); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	result := &types.ListRunnerResponse{
+		Runners: make([]types.RunnerInfo, 0),
+	}
+	for _, v := range g.Runners {
+		result.Runners = append(result.Runners, *v)
+	}
 	return result.Marshal()
 }
 

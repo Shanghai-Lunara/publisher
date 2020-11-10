@@ -76,6 +76,7 @@ const (
 	ListNamespace  ServiceAPI = "ListNamespace"
 	ListGroupName  ServiceAPI = "ListGroupName"
 	ListTask       ServiceAPI = "ListTask"
+	ListRunner     ServiceAPI = "ListRunner"
 	RegisterRunner ServiceAPI = "RegisterRunner"
 	UpdateStep     ServiceAPI = "UpdateStep"
 	RunStep        ServiceAPI = "RunStep"
@@ -117,6 +118,15 @@ type ListTaskRequest struct {
 
 type ListTaskResponse struct {
 	Tasks []Task `json:"tasks" protobuf:"bytes,1,opt,name=tasks"`
+}
+
+type ListRunnerRequest struct {
+	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+}
+
+type ListRunnerResponse struct {
+	Runners []RunnerInfo `json:"runners" protobuf:"bytes,1,opt,name=runners"`
 }
 
 type RegisterRunnerRequest struct {
