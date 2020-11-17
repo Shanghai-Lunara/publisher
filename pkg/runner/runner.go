@@ -41,6 +41,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 	exist := false
 	for _, v := range r.StepOperators {
 		if v.Step().Name == s.Name {
+			v.Update(s)
 			exist = true
 			v.Prepare()
 			res, err := v.Run(r.StreamOutput)
