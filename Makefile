@@ -11,3 +11,6 @@ dc:
 	go mod vendor
 	cd scripts && bash ./gen.sh deepcopy
 	rm -rf vendor
+
+run:
+	go run cmd/v1/scheduler/main.go -v=4
