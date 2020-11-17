@@ -252,15 +252,15 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		if v.Name == req.Step.Name {
 			exist = true
 			// todo send to the Runner, and then sync to all dashboards for updating Runner status
-			v.Phase = types.StepRunning
-			step := v.DeepCopy()
+			v = *req.Step.DeepCopy()
+			//v.Phase = types.StepRunning
 			// run
-			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, step); err != nil {
+			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 				klog.V(2).Info(err)
 				return nil, err
 			}
 			// sync for updating
-			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, step); err != nil {
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 				klog.V(2).Info(err)
 				return nil, err
 			}
