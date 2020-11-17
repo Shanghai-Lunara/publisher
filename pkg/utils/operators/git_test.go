@@ -53,7 +53,7 @@ func Test_git_Step(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			if got := g.Step(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("git.Step() = %v, want %v", got, tt.want)
@@ -89,7 +89,7 @@ func Test_git_Run(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.Run(make(chan<- string, 4096))
 			if (err != nil) != tt.wantErr {
@@ -122,7 +122,7 @@ func Test_git_pull(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.pull()
 			if (err != nil) != tt.wantErr {
@@ -160,11 +160,7 @@ func Test_git_exec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := &git{
-				output: make(chan<- string, 4096),
-				step: tt.fields.step,
-			}
-			gotRes, err := g.exec(tt.args.commands)
+			gotRes, err := DefaultExec(tt.args.commands)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("git.exec() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -193,7 +189,7 @@ func Test_git_cd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.cd()
 			if (err != nil) != tt.wantErr {
@@ -223,7 +219,7 @@ func Test_git_fetchAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.fetchAll()
 			if (err != nil) != tt.wantErr {
@@ -253,7 +249,7 @@ func Test_git_revert(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.revert()
 			if (err != nil) != tt.wantErr {
@@ -300,7 +296,7 @@ func Test_git_checkout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			gotRes, err := g.checkout()
 			if (err != nil) != tt.wantErr {
@@ -345,7 +341,7 @@ func Test_git_branch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &git{
 				output: make(chan<- string, 4096),
-				step: tt.fields.step,
+				step:   tt.fields.step,
 			}
 			if _, err := g.checkout(); err != nil {
 				t.Errorf("git.branch() g.checkout() error = %v", err)

@@ -41,6 +41,7 @@ func (g *git) Update(s *types.Step) {
 }
 
 func (g *git) Prepare() {
+
 }
 
 func (g *git) Run(output chan<- string) (res []string, err error) {
@@ -53,6 +54,11 @@ func (g *git) Run(output chan<- string) (res []string, err error) {
 		return res, err
 	}
 	if out, err = g.revert(); err != nil {
+		klog.V(2).Info(err)
+		g.step.Phase = types.StepFailed
+		return res, err
+	}
+	if out, err = g.checkout(); err != nil {
 		klog.V(2).Info(err)
 		g.step.Phase = types.StepFailed
 		return res, err
