@@ -2,11 +2,10 @@ package scheduler
 
 import (
 	"fmt"
-	"sort"
-	"sync"
-
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog"
+	"sort"
+	"sync"
 )
 
 const (
@@ -81,7 +80,16 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		// At the same time, the Runner status would be changed and synced to all dashboards.
 		res, err = s.handleRunStep(req.Data)
 	case types.UpdateStep:
-		res, err = s.handleUpdateStep(req.Data, req.Type.Body)
+		var tn *triggerNext
+		res, tn, err = s.handleUpdateStep(req.Data, req.Type.Body)
+		if req.Type.Body == types.BodyRunner && tn != nil && tn.next == true {
+			go func() {
+				_, err := s.triggerRunStep(tn.ri, tn.step)
+				if err != nil {
+					klog.V(2).Info(err)
+				}
+			}()
+		}
 	case types.CompleteStep:
 		// CompleteStep must be sent from the Runner in the Scheduler handler.
 		res, err = s.handleCompleteStep(req.Data)
@@ -266,6 +274,7 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 			}
 		}
 		if exist {
+			// if the exist was true, it would change all the steps' phases to Pending
 			v.Phase = types.StepPending
 			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
 				klog.V(2).Info(err)
@@ -281,48 +290,79 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 	return res, nil
 }
 
-func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, err error) {
+type triggerNext struct {
+	next bool
+	ri   *types.RunnerInfo
+	step *types.Step
+}
+
+func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, tn *triggerNext, err error) {
+	tn = &triggerNext{
+		next: false,
+		ri:   &types.RunnerInfo{},
+		step: &types.Step{},
+	}
 	req := &types.RunStepRequest{}
 	if err = req.Unmarshal(data); err != nil {
 		klog.V(2).Info(err)
-		return nil, err
+		return nil, tn, err
 	}
 	var g *Group
 	if g, err = s.getGroup(req.Namespace, req.GroupName); err != nil {
 		klog.V(2).Info(err)
-		return nil, err
+		return nil, tn, err
 	}
 	s.mu.Lock()
 	var ri *types.RunnerInfo
 	if t, ok := g.Runners[req.RunnerName]; !ok {
 		s.mu.Unlock()
-		return nil, fmt.Errorf(ErrRunnerWasNotExisted, req.Namespace, req.GroupName, req.RunnerName)
+		return nil, tn, fmt.Errorf(ErrRunnerWasNotExisted, req.Namespace, req.GroupName, req.RunnerName)
 	} else {
 		s.mu.Unlock()
 		ri = t
 	}
 	exist := false
+	next := false
 	newSteps := make([]types.Step, 0)
 	for _, v := range ri.Steps {
-		if v.Name == req.Step.Name {
-			exist = true
-			v = req.Step
-			// sync for updating
-			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
+		switch next {
+		case false:
+			if v.Name == req.Step.Name {
+				exist = true
+				v = req.Step
+				// sync for updating
+				if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
+					klog.V(2).Info(err)
+					return nil, tn, err
+				}
+				// if the request body was types.BodyRunner and the step.Phase was the types.StepSucceeded,
+				// it means that the Scheduler should trigger automatic running
+				if body == types.BodyRunner && v.Phase == types.StepSucceeded {
+					next = true
+				}
 			}
-		}
-		if exist {
-			// todo check Step Policy for automatic running
+		case true:
+			// todo check Step Policy for automatic running when the body was types.BodyRunner
+			if v.Policy == types.StepPolicyAuto {
+				if v.Phase != types.StepDisabled {
+					// trigger running
+					next = true
+					tn.next = true
+					tn.ri = ri
+					tn.step = &v
+					klog.V(3).Info("+++++ auto trigger step:", v.Name)
+				}
+			} else {
+				next = false
+			}
 		}
 		newSteps = append(newSteps, v)
 	}
 	ri.Steps = newSteps
 	if !exist {
-		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
+		return nil, tn, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
 	}
-	return res, nil
+	return res, tn, nil
 }
 
 func (s *Scheduler) handleCompleteStep(data []byte) (res []byte, err error) {
@@ -456,6 +496,42 @@ func (s *Scheduler) handleLogStream(data []byte) (res []byte, err error) {
 		bt:         broadcastTypeDashboard,
 		runnerName: "",
 		msg:        data2,
+	}
+	return res, nil
+}
+
+func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res []byte, err error) {
+	exist := false
+	newSteps := make([]types.Step, 0)
+	for _, v := range ri.Steps {
+		if v.Name == step.Name {
+			exist = true
+			// todo send to the Runner, and then sync to all dashboards for updating Runner status
+			v = *step.DeepCopy()
+			//v.Phase = types.StepRunning
+			// run
+			if err = s.runStepToRunner(ri.Namespace, ri.GroupName, ri.Name, &v); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+			// sync for updating
+			if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, &v); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+		}
+		if exist {
+			v.Phase = types.StepPending
+			if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, v.DeepCopy()); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
+		}
+		newSteps = append(newSteps, v)
+	}
+	ri.Steps = newSteps
+	if !exist {
+		return nil, fmt.Errorf(ErrStepWasNotExisted, ri.Namespace, ri.GroupName, ri.Name, step.Name)
 	}
 	return res, nil
 }

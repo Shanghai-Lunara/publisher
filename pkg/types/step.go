@@ -20,6 +20,8 @@ const (
 	// StepUnknown means that for some reason the state of the Step could not be obtained, typically due
 	// to an error in communicating with the host of the Step.
 	StepUnknown StepPhase = "Unknown"
+	// StepDisabled means that the step was disabled temporarily, and then the logic would skip the step
+	StepDisabled StepPhase = "Disabled"
 )
 
 type StepPolicy string

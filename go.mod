@@ -1,6 +1,6 @@
 module github.com/nevercase/publisher
 
-go 1.14
+go 1.15
 
 require (
 	github.com/Shanghai-Lunara/go-gpt v0.0.0-20200720090022-6c0fd8a39733
