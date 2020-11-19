@@ -254,6 +254,7 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		s.mu.Unlock()
 		ri = t
 	}
+	klog.Info("handleRunStep name:", req.Step.Name)
 	exist := false
 	newSteps := make([]types.Step, 0)
 	for _, v := range ri.Steps {
@@ -261,7 +262,7 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 			exist = true
 			// todo send to the Runner, and then sync to all dashboards for updating Runner status
 			v = *req.Step.DeepCopy()
-			//v.Phase = types.StepRunning
+			v.Phase = types.StepRunning
 			// run
 			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 				klog.V(2).Info(err)
@@ -275,11 +276,11 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		}
 		if exist {
 			// if the exist was true, it would change all the steps' phases to Pending
-			v.Phase = types.StepPending
-			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
-			}
+			//v.Phase = types.StepPending
+			//if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
+			//	klog.V(2).Info(err)
+			//	return nil, err
+			//}
 		}
 		newSteps = append(newSteps, v)
 	}
@@ -327,6 +328,7 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 	for _, v := range ri.Steps {
 		switch next {
 		case false:
+			//klog.Infof("next false body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
 			if v.Name == req.Step.Name {
 				exist = true
 				v = req.Step
@@ -342,14 +344,15 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 				}
 			}
 		case true:
+			//klog.Infof("next true body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
 			// todo check Step Policy for automatic running when the body was types.BodyRunner
 			if v.Policy == types.StepPolicyAuto {
 				if v.Phase != types.StepDisabled {
 					// trigger running
-					next = true
+					next = false
 					tn.next = true
 					tn.ri = ri
-					tn.step = &v
+					tn.step = v.DeepCopy()
 					klog.V(3).Info("+++++ auto trigger step:", v.Name)
 				}
 			} else {
@@ -501,6 +504,7 @@ func (s *Scheduler) handleLogStream(data []byte) (res []byte, err error) {
 }
 
 func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res []byte, err error) {
+	klog.Info("triggerRunStep name:", step.Name)
 	exist := false
 	newSteps := make([]types.Step, 0)
 	for _, v := range ri.Steps {
@@ -520,13 +524,13 @@ func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res 
 				return nil, err
 			}
 		}
-		if exist {
-			v.Phase = types.StepPending
-			if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, v.DeepCopy()); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
-			}
-		}
+		//if exist {
+		//	v.Phase = types.StepPending
+		//	if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, v.DeepCopy()); err != nil {
+		//		klog.V(2).Info(err)
+		//		return nil, err
+		//	}
+		//}
 		newSteps = append(newSteps, v)
 	}
 	ri.Steps = newSteps
