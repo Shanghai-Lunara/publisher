@@ -13,4 +13,4 @@ dc:
 	rm -rf vendor
 
 run:
-	go run cmd/v1/scheduler/main.go -v=4
+	go run ./cmd/v1/scheduler/main.go -v=4 -configPath=./cmd/v1/scheduler/conf.yaml

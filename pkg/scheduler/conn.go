@@ -2,6 +2,8 @@ package scheduler
 
 import (
 	"context"
+	"github.com/nevercase/publisher/pkg/conf"
+	"github.com/nevercase/publisher/pkg/dao"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -24,7 +26,7 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-func NewConnections(ctx context.Context) *connections {
+func NewConnections(ctx context.Context, c *conf.Config) *connections {
 	cs := &connections{
 		autoIncrementId: 0,
 		items:           make(map[int32]*conn, 0),
@@ -32,7 +34,7 @@ func NewConnections(ctx context.Context) *connections {
 		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
-	cs.scheduler = NewScheduler(cs.broadcast)
+	cs.scheduler = NewScheduler(cs.broadcast, dao.New(&c.Mysql))
 	go cs.remove()
 	go cs.broadcastToDashboard()
 	return cs

@@ -1,5 +1,5 @@
 # This the configuration file of the Publisher
-GameService:
+PublisherService:
   listenPort: 6969
 
 Mysql:

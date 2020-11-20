@@ -2,6 +2,8 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
+	"github.com/nevercase/publisher/pkg/conf"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"net"
@@ -27,10 +29,10 @@ func (s *Server) Close() {
 
 }
 
-func NewServer(addr string) *Server {
+func NewServer(c *conf.Config) *Server {
 	s := &Server{
-		connections: NewConnections(context.Background()),
+		connections: NewConnections(context.Background(), c),
 	}
-	go s.initWSServer(addr)
+	go s.initWSServer(fmt.Sprintf(":%d", c.PublisherService.ListenPort))
 	return s
 }

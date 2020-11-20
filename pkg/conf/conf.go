@@ -8,13 +8,13 @@ import (
 	"k8s.io/klog"
 )
 
-type GameService struct {
+type PublisherService struct {
 	ListenPort int `json:"listenPort" yaml:"listenPort"`
 }
 
 type Config struct {
-	GameService GameService         `yaml:"GameService,flow"`
-	Mysql       dao.MysqlPoolConfig `yaml:"Mysql,flow"`
+	PublisherService PublisherService    `yaml:"PublisherService,flow"`
+	Mysql            dao.MysqlPoolConfig `yaml:"Mysql,flow"`
 }
 
 var (
@@ -25,7 +25,7 @@ func init() {
 	flag.StringVar(&configPath, "configPath", "conf.yml", "configuration file path")
 }
 
-func Init() (*Config, error) {
+func Init() *Config {
 	c := &Config{}
 	var data []byte
 	var err error
@@ -35,5 +35,5 @@ func Init() (*Config, error) {
 	if err := yaml.Unmarshal(data, c); err != nil {
 		klog.Fatal(err)
 	}
-	return c, nil
+	return c
 }

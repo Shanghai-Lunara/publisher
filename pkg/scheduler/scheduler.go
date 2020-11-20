@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"fmt"
+	"github.com/nevercase/publisher/pkg/dao"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"sort"
@@ -19,10 +20,11 @@ const (
 	GroupNameTWSpade   types.GroupName = "tw-spade"
 )
 
-func NewScheduler(broadcast chan *broadcast) *Scheduler {
+func NewScheduler(broadcast chan *broadcast, d *dao.Dao) *Scheduler {
 	s := &Scheduler{
 		items:     make(map[types.Namespace]*Groups, 0),
 		broadcast: broadcast,
+		dao:       d,
 	}
 	s.items[NamespaceHelixSaga] = &Groups{
 		items: make(map[types.GroupName]*Group, 0),
@@ -42,6 +44,7 @@ func NewScheduler(broadcast chan *broadcast) *Scheduler {
 
 type Scheduler struct {
 	mu        sync.Mutex
+	dao       *dao.Dao
 	items     map[types.Namespace]*Groups
 	broadcast chan<- *broadcast
 }
