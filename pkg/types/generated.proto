@@ -196,6 +196,9 @@ message Step {
 
   // RunnerName was the name of a Runner (the Runner which has been called to run this Step)
   optional string runnerName = 10;
+
+  // DurationInMS was the total used time during the whole step
+  optional int32 durationInMs = 11;
 }
 
 message Task {
