@@ -1,12 +1,15 @@
 package scheduler
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"github.com/nevercase/publisher/pkg/dao"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"sort"
 	"sync"
+	"time"
 )
 
 const (
@@ -335,6 +338,10 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 			if v.Name == req.Step.Name {
 				exist = true
 				v = req.Step
+				// save to db
+				if body == types.BodyRunner {
+					go s.recordStep(ri, v.DeepCopy())
+				}
 				// sync for updating
 				if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 					klog.V(2).Info(err)
@@ -541,4 +548,34 @@ func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res 
 		return nil, fmt.Errorf(ErrStepWasNotExisted, ri.Namespace, ri.GroupName, ri.Name, step.Name)
 	}
 	return res, nil
+}
+
+func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
+	data, err := step.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return
+	}
+	db := s.dao.Mysql.Master()
+	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		klog.V(2).Info(err)
+	}
+	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`createdTM`) values (?,?,?,?,?)",
+		ri.Namespace,
+		ri.GroupName,
+		step.RunnerName,
+		data,
+		time.Now().Unix())
+	if err != nil {
+		klog.V(2).Info(err)
+		if err := tx.Rollback(); err != nil {
+			klog.V(2).Info(err)
+		}
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		klog.V(2).Info(err)
+		return
+	}
 }
