@@ -3,7 +3,7 @@ GameService:
   listenPort: 6969
 
 Mysql:
-  Master:
+  master:
     host: mo-data-master
     port: 3306
     user: root
@@ -12,7 +12,7 @@ Mysql:
     max_idle_conns: 0
     max_open_conns: 0
     conn_max_lifetime: 0
-  Slave:
+  slave:
     host: mo-data-master
     port: 3306
     user: root
