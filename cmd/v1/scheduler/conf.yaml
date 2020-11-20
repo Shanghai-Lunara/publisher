@@ -1,0 +1,23 @@
+# This the configuration file of the Publisher
+GameService:
+  listenPort: 6969
+
+Mysql:
+  Master:
+    host: mo-data-master
+    port: 3306
+    user: root
+    password: root
+    database: publisher
+    max_idle_conns: 0
+    max_open_conns: 0
+    conn_max_lifetime: 0
+  Slave:
+    host: mo-data-master
+    port: 3306
+    user: root
+    password: root
+    database: publisher
+    max_idle_conns: 0
+    max_open_conns: 0
+    conn_max_lifetime: 0
