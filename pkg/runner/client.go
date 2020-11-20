@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nevercase/publisher/pkg/scheduler"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"net/url"
 	"time"
 )

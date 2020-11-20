@@ -3,7 +3,7 @@ package scheduler
 import (
 	"fmt"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"sort"
 	"sync"
 )

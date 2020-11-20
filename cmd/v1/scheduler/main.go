@@ -5,7 +5,7 @@ import (
 
 	"github.com/nevercase/k8s-controller-custom-resource/pkg/signals"
 	"github.com/nevercase/publisher/pkg/scheduler"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 var addr string

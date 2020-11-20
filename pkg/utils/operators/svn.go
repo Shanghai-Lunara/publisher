@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 func NewSvn(host string, port int, username, password, remoteDir, workDir string) interfaces.StepOperator {

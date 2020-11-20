@@ -3,7 +3,7 @@ package scheduler
 import (
 	"context"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"net"
 	"net/http"
 )

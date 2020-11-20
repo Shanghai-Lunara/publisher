@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -226,7 +226,8 @@ func (c *conn) readPump() {
 	defer c.close()
 	for {
 		messageType, data, err := c.conn.ReadMessage()
-		klog.Infof("messageType: %d message-string: %v\n", messageType, string(data))
+		klog.V(5).Info("data:", data)
+		klog.V(5).Infof("messageType: %d message-string: %s\n", messageType, string(data))
 		if err != nil {
 			klog.V(2).Info(err)
 			return

@@ -7,7 +7,7 @@ import (
 
 	"github.com/Shanghai-Lunara/go-gpt/pkg/operator"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 func NewFtp(host string, port int, username, password, workDir string, timeout int) *ftp {

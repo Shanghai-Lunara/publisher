@@ -7,7 +7,7 @@ import (
 
 	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 func NewGit(gitDir string, branchName string) interfaces.StepOperator {
