@@ -67,6 +67,7 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		klog.V(2).Info(err)
 		return res, err
 	}
+	reqType := req.Type
 	switch req.Type.ServiceAPI {
 	case types.Ping:
 		res, err = s.handlePing(req.Data, clientId)
@@ -103,6 +104,9 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		// LogStream must be sent from the Runner in the Scheduler handler.
 		// The output should be inserted into mysql, and sent to all dashboard at the same time
 		res, err = s.handleLogStream(req.Data)
+	case types.ServiceAPIListRecordsRequest:
+		reqType.ServiceAPI = types.ServiceAPIListRecordsResponse
+		res, err = s.handleListRecordsRequest(req.Data)
 	}
 	if err != nil {
 		klog.V(2).Info(err)
@@ -113,7 +117,7 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		return res, nil
 	}
 	result := &types.Request{
-		Type: req.Type,
+		Type: reqType,
 		Data: res,
 	}
 	return result.Marshal()
@@ -578,4 +582,36 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 		klog.V(2).Info(err)
 		return
 	}
+}
+
+func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error) {
+	req := &types.ListRecordsRequest{}
+	if err := req.Unmarshal(data); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	db := s.dao.Mysql.Master()
+	rows, err := db.Query("SELECT * FROM records WHERE `namespace` = ? AND `groupName` = ? ORDER BY id DESC LIMIT ?, ?",
+		req.Namespace,
+		req.GroupName,
+		req.Page,
+		req.Length)
+	if err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	records := make([]types.Record, 0)
+	for rows.Next() {
+		record := &types.Record{}
+		if err := rows.Scan(&record.Id, &record.Namespace, &record.GroupName, &record.RunnerName, &record.StepInfo, &record.CreatedTM); err != nil {
+			klog.V(2).Info(err)
+			return nil, err
+		}
+		records = append(records, *record)
+	}
+	response := &types.ListRecordsResponse{
+		Params:  *req,
+		Records: records,
+	}
+	return response.Marshal()
 }
