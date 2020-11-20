@@ -58,6 +58,26 @@ message ListNamespaceResponse {
   repeated string items = 1;
 }
 
+// ListRecordsRequest
+message ListRecordsRequest {
+  optional string namespace = 1;
+
+  optional string groupName = 2;
+
+  optional string runnerName = 3;
+
+  optional int32 page = 4;
+
+  optional int32 length = 5;
+}
+
+// ListRecordsResponse
+message ListRecordsResponse {
+  optional ListRecordsRequest namespace = 1;
+
+  repeated Record records = 2;
+}
+
 message ListRunnerRequest {
   optional string namespace = 1;
 
@@ -104,6 +124,20 @@ message PingRequest {
 }
 
 message PongResponse {
+}
+
+message Record {
+  optional int32 id = 1;
+
+  optional string namespace = 2;
+
+  optional string groupName = 3;
+
+  optional string runnerName = 4;
+
+  optional bytes stepInfo = 5;
+
+  optional int32 createdTM = 6;
 }
 
 message RegisterRunnerRequest {

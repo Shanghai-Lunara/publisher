@@ -72,16 +72,18 @@ type RunnerInfo struct {
 type ServiceAPI string
 
 const (
-	Ping           ServiceAPI = "Ping"
-	ListNamespace  ServiceAPI = "ListNamespace"
-	ListGroupName  ServiceAPI = "ListGroupName"
-	ListTask       ServiceAPI = "ListTask"
-	ListRunner     ServiceAPI = "ListRunner"
-	RegisterRunner ServiceAPI = "RegisterRunner"
-	UpdateStep     ServiceAPI = "UpdateStep"
-	RunStep        ServiceAPI = "RunStep"
-	LogStream      ServiceAPI = "LogStream"
-	CompleteStep   ServiceAPI = "CompleteStep"
+	Ping                          ServiceAPI = "Ping"
+	ListNamespace                 ServiceAPI = "ListNamespace"
+	ListGroupName                 ServiceAPI = "ListGroupName"
+	ListTask                      ServiceAPI = "ListTask"
+	ListRunner                    ServiceAPI = "ListRunner"
+	RegisterRunner                ServiceAPI = "RegisterRunner"
+	UpdateStep                    ServiceAPI = "UpdateStep"
+	RunStep                       ServiceAPI = "RunStep"
+	LogStream                     ServiceAPI = "LogStream"
+	CompleteStep                  ServiceAPI = "CompleteStep"
+	ServiceAPIListRecordsRequest  ServiceAPI = "ListRecordsRequest"
+	ServiceAPIListRecordsResponse ServiceAPI = "ListRecordsResponse"
 )
 
 type Result struct {
@@ -178,4 +180,19 @@ type LogStreamRequest struct {
 }
 
 type LogStreamResponse struct {
+}
+
+// ListRecordsRequest
+type ListRecordsRequest struct {
+	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
+	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
+	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
+	Page       int32     `json:"page" protobuf:"varint,4,opt,name=page"`
+	Length     int32     `json:"length" protobuf:"varint,5,opt,name=length"`
+}
+
+// ListRecordsResponse
+type ListRecordsResponse struct {
+	Params  ListRecordsRequest `json:"params" protobuf:"bytes,1,opt,name=namespace"`
+	Records []Record           `json:"records" protobuf:"bytes,2,opt,name=records"`
 }
