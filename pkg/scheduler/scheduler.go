@@ -568,7 +568,7 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`createdTM`) values (?,?,?,?,?)",
 		ri.Namespace,
 		ri.GroupName,
-		step.RunnerName,
+		ri.Name,
 		data,
 		time.Now().Unix())
 	if err != nil {
