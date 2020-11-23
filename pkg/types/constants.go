@@ -32,6 +32,9 @@ const (
 	PublisherSvnWorkDir       = "svn_work_dir"
 	PublisherSvnCommitMessage = "svn_commit_message"
 	PublisherSvnCommand       = "svn_command"
+
+	// final version
+	FinalFullVersion = "FinalFullVersion"
 )
 
 const (

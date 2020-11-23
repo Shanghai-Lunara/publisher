@@ -1,10 +1,12 @@
 package operators
 
 import (
+	"encoding/xml"
 	"fmt"
 	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
+	"time"
 )
 
 func NewSvn(host string, port int, username, password, remoteDir, workDir string) interfaces.StepOperator {
@@ -56,6 +58,7 @@ const (
 	SvnCommandCheckout   = "checkout"
 	SvnCommandAddAll     = "add all"
 	SvnCommandCommit     = "commit"
+	SvnCommandLog        = "log"
 )
 
 func (s *svn) AppendMessage(action string) {
@@ -111,6 +114,12 @@ func (s *svn) Run(output chan<- string) (res []string, err error) {
 			klog.V(2).Info(err)
 			s.step.Phase = types.StepFailed
 			return res, err
+		}
+		s.AppendMessage(SvnCommandLog)
+		if _, err = s.log(1); err != nil {
+			klog.V(2).Info(err)
+			s.step.Phase = types.StepFailed
+			return nil, err
 		}
 		res = append(res, string(out))
 	}
@@ -179,4 +188,60 @@ func (s *svn) commit() (res []byte, err error) {
 		s.step.Envs[types.PublisherSvnUsername],
 	)
 	return ExecWithStreamOutput(commands, s.output)
+}
+
+type LogResponse struct {
+	XMLName   xml.Name   `xml:"log"`
+	Logentrys []Logentry `xml:"logentry" json:"logentrys"`
+}
+
+type Logentry struct {
+	Revision string    `xml:"revision,attr" json:"revision,omitempty"`
+	Author   string    `xml:"author" json:"author,omitempty"`
+	DateTime time.Time `xml:"date" json:"date_time,omitempty"`
+	Msg      string    `xml:"msg" json:"msg,omitempty"`
+	Paths    []Path    `xml:"paths>path" json:"paths,omitempty"`
+}
+
+type Path struct {
+	Action   string `xml:"action,attr" json:"action,omitempty"`
+	PropMods string `xml:"prop-mods,attr" json:"prop_mods,omitempty"`
+	TextMods string `xml:"text-mods,attr" json:"text_mods,omitempty"`
+	Kind     string `xml:"kind,attr" json:"kind,omitempty"`
+	Value    string `xml:",chardata" json:"value,omitempty"`
+}
+
+const XMLFormat = `
+Revision:   %s
+Author:     %s
+DateTime:   %s
+Msg:        %s
+`
+
+func (s *svn) log(number int) (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s log -l %d -v --xml",
+		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
+		s.step.Envs[types.PublisherSvnUsername],
+		s.step.Envs[types.PublisherSvnPassword],
+		number,
+	)
+	res, err = DefaultExec(commands)
+	if err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
+	rest := &LogResponse{}
+	if err := xml.Unmarshal(res, rest); err != nil {
+		return res, err
+	}
+	if len(rest.Logentrys) > 0 {
+		latest := rest.Logentrys[0]
+		s.step.Envs[types.FinalFullVersion] = fmt.Sprintf(XMLFormat,
+			latest.Revision,
+			latest.Author,
+			latest.DateTime.Format("2006-01-02 15:04:05"),
+			latest.Msg)
+		klog.Info(s.step.Envs[types.FinalFullVersion])
+	}
+	return res, nil
 }
