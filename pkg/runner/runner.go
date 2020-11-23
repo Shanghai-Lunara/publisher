@@ -48,6 +48,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 			if err != nil {
 				klog.V(2).Info(err)
 				// todo report Run error
+				r.StreamOutput <- err.Error()
 				return err
 			}
 			// todo update Step information use DeepCopy
