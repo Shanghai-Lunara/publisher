@@ -44,6 +44,7 @@ func (s *svn) Update(step *types.Step) {
 }
 
 func (s *svn) Prepare() {
+	s.step.Messages = make([]string, 0)
 }
 
 const (
