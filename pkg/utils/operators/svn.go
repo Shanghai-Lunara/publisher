@@ -15,7 +15,7 @@ func NewSvn(host string, port int, username, password, remoteDir, workDir string
 	envs[types.PublisherSvnPassword] = password
 	envs[types.PublisherSvnRemoteDir] = remoteDir
 	envs[types.PublisherSvnWorkDir] = workDir
-	envs[types.PublisherSvnCommitMessage] = "svn commit"
+	envs[types.PublisherSvnCommitMessage] = "Automate Runner"
 	envs[types.PublisherSvnCommand] = SvnCommandWaiting
 	return &svn{
 		step: &types.Step{
@@ -171,7 +171,7 @@ func (s *svn) removeAll() (res []byte, err error) {
 }
 
 func (s *svn) commit() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && svn --username %s --password %s commit --message \"${%s} - committed by ${%s}@publisher\"",
+	commands := fmt.Sprintf("cd %s && svn --username %s --password %s commit --message \"%s - committed by %s@publisher\"",
 		fmt.Sprintf("%s/%s", s.step.Envs[types.PublisherSvnWorkDir], s.step.Envs[types.PublisherSvnRemoteDir]),
 		s.step.Envs[types.PublisherSvnUsername],
 		s.step.Envs[types.PublisherSvnPassword],
