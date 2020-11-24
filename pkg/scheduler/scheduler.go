@@ -581,7 +581,7 @@ func getStepType(s *types.Step) int {
 	if _, ok := s.Envs[types.VersionFlag]; !ok {
 		return types.RecordDefault
 	}
-	return types.RecrodVersion
+	return types.RecordVersion
 }
 
 func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error) {

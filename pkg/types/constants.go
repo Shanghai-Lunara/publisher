@@ -39,7 +39,7 @@ const (
 
 const (
 	RecordDefault = iota
-	RecrodVersion
+	RecordVersion
 )
 
 const (
