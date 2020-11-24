@@ -21,13 +21,14 @@ func NewSvn(host string, port int, username, password, remoteDir, workDir string
 	envs[types.PublisherSvnCommand] = SvnCommandWaiting
 	return &svn{
 		step: &types.Step{
-			Id:       0,
-			Name:     "SVN-Operator",
-			Phase:    types.StepPending,
-			Policy:   types.StepPolicyAuto,
-			Envs:     envs,
-			Messages: make([]string, 0),
-			Output:   make([]string, 0),
+			Id:        0,
+			Name:      "SVN-Operator",
+			Phase:     types.StepPending,
+			Policy:    types.StepPolicyAuto,
+			Available: types.StepAvailableEnable,
+			Envs:      envs,
+			Messages:  make([]string, 0),
+			Output:    make([]string, 0),
 		},
 	}
 }

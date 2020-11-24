@@ -17,12 +17,13 @@ func NewGit(gitDir string, branchName string) interfaces.StepOperator {
 	return &git{
 		output: make(chan<- string, 4096),
 		step: &types.Step{
-			Id:     0,
-			Name:   "Git-Operator",
-			Phase:  types.StepPending,
-			Policy: types.StepPolicyAuto,
-			Envs:   envs,
-			Output: make([]string, 0),
+			Id:        0,
+			Name:      "Git-Operator",
+			Phase:     types.StepPending,
+			Policy:    types.StepPolicyAuto,
+			Available: types.StepAvailableEnable,
+			Envs:      envs,
+			Output:    make([]string, 0),
 		},
 	}
 }

@@ -20,12 +20,13 @@ func NewFtp(host string, port int, username, password, workDir string, timeout i
 	envs[types.PublisherFtpTimeout] = fmt.Sprintf("%d", timeout)
 	return &ftp{
 		step: &types.Step{
-			Id:     0,
-			Name:   "Ftp-Operator",
-			Phase:  types.StepPending,
-			Policy: types.StepPolicyAuto,
-			Envs:   envs,
-			Output: make([]string, 0),
+			Id:        0,
+			Name:      "Ftp-Operator",
+			Phase:     types.StepPending,
+			Policy:    types.StepPolicyAuto,
+			Available: types.StepAvailableEnable,
+			Envs:      envs,
+			Output:    make([]string, 0),
 		},
 	}
 }

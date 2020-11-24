@@ -361,7 +361,7 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 			//klog.Infof("next true body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
 			// todo check Step Policy for automatic running when the body was types.BodyRunner
 			if v.Policy == types.StepPolicyAuto {
-				if v.Phase != types.StepDisabled {
+				if v.Available != types.StepAvailableDisable {
 					// trigger running
 					next = false
 					tn.next = true
