@@ -35,8 +35,6 @@ const (
 
 	// version flag
 	VersionFlag = "VersionFlag"
-	// final full version
-	FinalFullVersion = "FinalFullVersion"
 )
 
 const (

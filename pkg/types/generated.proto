@@ -225,6 +225,9 @@ message Step {
 
   // DurationInMS was the total used time during the whole step
   optional int32 durationInMs = 12;
+
+  // Remarks were the extra info after running the Step
+  repeated string remarks = 13;
 }
 
 message Task {

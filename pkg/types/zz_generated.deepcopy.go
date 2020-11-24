@@ -507,6 +507,11 @@ func (in *Step) DeepCopyInto(out *Step) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Remarks != nil {
+		in, out := &in.Remarks, &out.Remarks
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

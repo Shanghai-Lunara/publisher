@@ -62,6 +62,8 @@ type Step struct {
 	RunnerName string `json:"runnerName" protobuf:"bytes,11,opt,name=runnerName"`
 	// DurationInMS was the total used time during the whole step
 	DurationInMS int32 `json:"durationInMs" protobuf:"varint,12,opt,name=durationInMs"`
+	// Remarks were the extra info after running the Step
+	Remarks []string `json:"remarks" protobuf:"bytes,13,opt,name=remarks"`
 }
 
 type UploadFile struct {

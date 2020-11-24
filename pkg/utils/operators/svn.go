@@ -48,7 +48,7 @@ func (s *svn) Update(step *types.Step) {
 
 func (s *svn) Prepare() {
 	s.step.Messages = make([]string, 0)
-	s.step.Envs[types.FinalFullVersion] = ""
+	s.step.Remarks = make([]string, 0)
 }
 
 const (
@@ -245,12 +245,12 @@ func (s *svn) log(number int) (res []byte, err error) {
 	}
 	if len(rest.Logentrys) > 0 {
 		latest := rest.Logentrys[0]
-		s.step.Envs[types.FinalFullVersion] = fmt.Sprintf(XMLFormat,
+		s.step.Remarks = append(s.step.Remarks, fmt.Sprintf(XMLFormat,
 			latest.Revision,
 			latest.Author,
 			latest.DateTime.Format("2006-01-02 15:04:05"),
-			latest.Msg)
-		klog.Info(s.step.Envs[types.FinalFullVersion])
+			latest.Msg))
+		klog.Info(s.step.Remarks)
 	}
 	return res, nil
 }
