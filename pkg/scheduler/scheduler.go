@@ -557,7 +557,7 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 	if err != nil {
 		klog.V(2).Info(err)
 	}
-	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`stepType`,`createdTM`) values (?,?,?,?,?)",
+	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`stepType`,`createdTM`) values (?,?,?,?,?,?)",
 		ri.Namespace,
 		ri.GroupName,
 		ri.Name,
