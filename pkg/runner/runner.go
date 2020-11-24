@@ -55,7 +55,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 				return err
 			}
 			// todo update Step information use DeepCopy
-			s.DurationInMS = int32(time.Now().Sub(t1).Milliseconds())
+			v.Step().DurationInMS = int32(time.Now().Sub(t1).Milliseconds())
 			_ = res
 		}
 	}
