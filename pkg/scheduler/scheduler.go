@@ -578,7 +578,7 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 }
 
 func getStepType(s *types.Step) int {
-	if _, ok := s.Envs[types.VersionFlag]; ok {
+	if _, ok := s.Envs[types.VersionFlag]; !ok {
 		return types.RecordDefault
 	}
 	return types.RecrodVersion
