@@ -20,8 +20,6 @@ const (
 	// StepUnknown means that for some reason the state of the Step could not be obtained, typically due
 	// to an error in communicating with the host of the Step.
 	StepUnknown StepPhase = "Unknown"
-	// StepDisabled means that the step was disabled temporarily, and then the logic would skip the step
-	StepDisabled StepPhase = "Disabled"
 )
 
 type StepPolicy string
@@ -29,6 +27,13 @@ type StepPolicy string
 const (
 	StepPolicyAuto   StepPolicy = "auto"
 	StepPolicyManual StepPolicy = "manual"
+)
+
+type StepAvailable string
+
+const (
+	StepAvailableEnable  StepAvailable = "enable"
+	StepAvailableDisable StepAvailable = "disable"
 )
 
 type Step struct {
@@ -39,21 +44,23 @@ type Step struct {
 	Phase StepPhase `json:"status" protobuf:"bytes,3,opt,name=status"`
 	// Policy was the StepPolicy of the Step which could control the Runner
 	Policy StepPolicy `json:"policy" protobuf:"bytes,4,opt,name=policy"`
+	// Available
+	Available StepAvailable `json:"available" protobuf:"bytes,5,opt,name=available"`
 	// Envs were the environment values which would be used by the called shell script.
 	// Usually, they would include some base configuration
-	Envs map[string]string `json:"envs" protobuf:"bytes,5,opt,name=envs"`
+	Envs map[string]string `json:"envs" protobuf:"bytes,6,opt,name=envs"`
 	// Output was the stdout from the executing shell commands
-	Output []string `json:"output" protobuf:"bytes,6,opt,name=output"`
+	Output []string `json:"output" protobuf:"bytes,7,opt,name=output"`
 	// UploadFiles were the map of the files which would be uploaded to the remote ftp server by the Step Run().
-	UploadFiles []UploadFile `json:"uploadFiles" protobuf:"bytes,7,opt,name=uploadFiles"`
+	UploadFiles []UploadFile `json:"uploadFiles" protobuf:"bytes,8,opt,name=uploadFiles"`
 	// WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
-	WriteFiles []WriteFile `json:"writeFiles" protobuf:"bytes,8,opt,name=writeFiles"`
+	WriteFiles []WriteFile `json:"writeFiles" protobuf:"bytes,9,opt,name=writeFiles"`
 	// Messages were the human readable message indicating details about all the conditions in a Step's lifecycle.
-	Messages []string `json:"messages" protobuf:"bytes,9,opt,name=messages"`
+	Messages []string `json:"messages" protobuf:"bytes,10,opt,name=messages"`
 	// RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-	RunnerName string `json:"runnerName" protobuf:"bytes,10,opt,name=runnerName"`
+	RunnerName string `json:"runnerName" protobuf:"bytes,11,opt,name=runnerName"`
 	// DurationInMS was the total used time during the whole step
-	DurationInMS int32 `json:"durationInMs" protobuf:"varint,11,opt,name=durationInMs"`
+	DurationInMS int32 `json:"durationInMs" protobuf:"varint,12,opt,name=durationInMs"`
 }
 
 type UploadFile struct {

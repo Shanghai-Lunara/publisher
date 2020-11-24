@@ -212,27 +212,30 @@ message Step {
   // Policy was the StepPolicy of the Step which could control the Runner
   optional string policy = 4;
 
+  // Available
+  optional string available = 5;
+
   // Envs were the environment values which would be used by the called shell script.
   // Usually, they would include some base configuration
-  map<string, string> envs = 5;
+  map<string, string> envs = 6;
 
   // Output was the stdout from the executing shell commands
-  repeated string output = 6;
+  repeated string output = 7;
 
   // UploadFiles were the map of the files which would be uploaded to the remote ftp server by the Step Run().
-  repeated UploadFile uploadFiles = 7;
+  repeated UploadFile uploadFiles = 8;
 
   // WriteFiles were map of the files which would be written to the remote ftp server by the Step Run().
-  repeated WriteFile writeFiles = 8;
+  repeated WriteFile writeFiles = 9;
 
   // Messages were the human readable message indicating details about all the conditions in a Step's lifecycle.
-  repeated string messages = 9;
+  repeated string messages = 10;
 
   // RunnerName was the name of a Runner (the Runner which has been called to run this Step)
-  optional string runnerName = 10;
+  optional string runnerName = 11;
 
   // DurationInMS was the total used time during the whole step
-  optional int32 durationInMs = 11;
+  optional int32 durationInMs = 12;
 }
 
 message Task {
