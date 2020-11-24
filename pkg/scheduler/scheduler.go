@@ -34,7 +34,6 @@ func NewScheduler(broadcast chan *broadcast, d *dao.Dao) *Scheduler {
 	}
 	s.items[NamespaceHelixSaga].items[GroupNameCNLeiTing] = &Group{
 		Runners: make(map[string]*types.RunnerInfo, 0),
-		Tasks:   make([]*types.Task, 0),
 	}
 	s.items[NamespaceHelix2] = &Groups{
 		items: make(map[types.GroupName]*Group, 0),
@@ -58,7 +57,6 @@ type Groups struct {
 
 type Group struct {
 	Runners map[string]*types.RunnerInfo `json:"runners" protobuf:"bytes,1,opt,name=runners"`
-	Tasks   []*types.Task                `json:"tasks" protobuf:"bytes,2,opt,name=tasks"`
 }
 
 func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err error) {
@@ -75,8 +73,6 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		res, err = s.handleListNamespaces(req.Data)
 	case types.ListGroupName:
 		res, err = s.handleListGroupNames(req.Data)
-	case types.ListTask:
-		res, err = s.handleListTasks(req.Data)
 	case types.ListRunner:
 		res, err = s.handleListRunners(req.Data)
 	case types.RegisterRunner:
@@ -163,19 +159,6 @@ func (s *Scheduler) handleListGroupNames(data []byte) (res []byte, err error) {
 		sort.Strings(keys)
 		result.Items = keys
 	}
-	return result.Marshal()
-}
-
-func (s *Scheduler) handleListTasks(data []byte) (res []byte, err error) {
-	req := &types.ListTaskRequest{}
-	if err = req.Unmarshal(data); err != nil {
-		klog.V(2).Info(err)
-		return nil, err
-	}
-	result := &types.ListTaskResponse{
-		Tasks: make([]types.Task, 0),
-	}
-
 	return result.Marshal()
 }
 
@@ -574,11 +557,12 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 	if err != nil {
 		klog.V(2).Info(err)
 	}
-	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`createdTM`) values (?,?,?,?,?)",
+	_, err = tx.Query("INSERT INTO records (`namespace`,`groupName`,`runnerName`,`stepInfo`,`stepType`,`createdTM`) values (?,?,?,?,?)",
 		ri.Namespace,
 		ri.GroupName,
 		ri.Name,
 		data,
+		getStepType(step),
 		time.Now().Unix())
 	if err != nil {
 		klog.V(2).Info(err)
@@ -591,6 +575,13 @@ func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {
 		klog.V(2).Info(err)
 		return
 	}
+}
+
+func getStepType(s *types.Step) int {
+	if _, ok := s.Envs[types.VersionFlag]; ok {
+		return types.RecordDefault
+	}
+	return types.RecrodVersion
 }
 
 func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error) {
@@ -612,7 +603,7 @@ func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error
 	records := make([]types.Record, 0)
 	for rows.Next() {
 		record := &types.Record{}
-		if err := rows.Scan(&record.Id, &record.Namespace, &record.GroupName, &record.RunnerName, &record.StepInfo, &record.CreatedTM); err != nil {
+		if err := rows.Scan(&record.Id, &record.Namespace, &record.GroupName, &record.RunnerName, &record.StepInfo, &record.StepType, &record.CreatedTM); err != nil {
 			klog.V(2).Info(err)
 			return nil, err
 		}

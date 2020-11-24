@@ -33,8 +33,15 @@ const (
 	PublisherSvnCommitMessage = "svn_commit_message"
 	PublisherSvnCommand       = "svn_command"
 
-	// final version
+	// version flag
+	VersionFlag = "VersionFlag"
+	// final full version
 	FinalFullVersion = "FinalFullVersion"
+)
+
+const (
+	RecordDefault = iota
+	RecrodVersion
 )
 
 const (

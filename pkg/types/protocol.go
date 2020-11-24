@@ -75,7 +75,6 @@ const (
 	Ping                          ServiceAPI = "Ping"
 	ListNamespace                 ServiceAPI = "ListNamespace"
 	ListGroupName                 ServiceAPI = "ListGroupName"
-	ListTask                      ServiceAPI = "ListTask"
 	ListRunner                    ServiceAPI = "ListRunner"
 	RegisterRunner                ServiceAPI = "RegisterRunner"
 	UpdateStep                    ServiceAPI = "UpdateStep"
@@ -109,17 +108,6 @@ type ListGroupNameRequest struct {
 
 type ListGroupNameResponse struct {
 	Items []string `json:"items" protobuf:"bytes,1,opt,name=items"`
-}
-
-type ListTaskRequest struct {
-	Namespace Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
-	GroupName GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
-	Page      int32     `json:"page" protobuf:"varint,3,opt,name=page"`
-	Length    int32     `json:"length" protobuf:"varint,4,opt,name=length"`
-}
-
-type ListTaskResponse struct {
-	Tasks []Task `json:"tasks" protobuf:"bytes,1,opt,name=tasks"`
 }
 
 type ListRunnerRequest struct {

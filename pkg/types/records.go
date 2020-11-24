@@ -6,5 +6,6 @@ type Record struct {
 	GroupName  GroupName `json:"groupName" protobuf:"bytes,3,opt,name=groupName"`
 	RunnerName string    `json:"runnerName" protobuf:"bytes,4,opt,name=runnerName"`
 	StepInfo   []byte    `json:"stepInfo" protobuf:"bytes,5,opt,name=stepInfo"`
-	CreatedTM  int32     `json:"createdTM" protobuf:"varint,6,opt,name=createdTM"`
+	StepType   int32     `json:"stepType" protobuf:"varint,8,opt,name=stepType"`
+	CreatedTM  int32     `json:"createdTM" protobuf:"varint,7,opt,name=createdTM"`
 }

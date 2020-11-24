@@ -88,20 +88,6 @@ message ListRunnerResponse {
   repeated RunnerInfo runners = 1;
 }
 
-message ListTaskRequest {
-  optional string namespace = 1;
-
-  optional string groupName = 2;
-
-  optional int32 page = 3;
-
-  optional int32 length = 4;
-}
-
-message ListTaskResponse {
-  repeated Task tasks = 1;
-}
-
 // +Protocol
 // LogStreamRequest was the string which was transferred from the abstract Runner when the Runner was running a step.
 // And it would also be sent from the Scheduler to each web dashboard for showing and watching
@@ -137,7 +123,9 @@ message Record {
 
   optional bytes stepInfo = 5;
 
-  optional int32 createdTM = 6;
+  optional int32 stepType = 8;
+
+  optional int32 createdTM = 7;
 }
 
 message RegisterRunnerRequest {
@@ -212,7 +200,8 @@ message Step {
   // Policy was the StepPolicy of the Step which could control the Runner
   optional string policy = 4;
 
-  // Available
+  // Available determines whether the Step was available, if the value was disable that means the current
+  // step should be skipped instead of running.
   optional string available = 5;
 
   // Envs were the environment values which would be used by the called shell script.
