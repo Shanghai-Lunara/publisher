@@ -47,6 +47,7 @@ func (s *svn) Update(step *types.Step) {
 
 func (s *svn) Prepare() {
 	s.step.Messages = make([]string, 0)
+	s.step.Envs[types.FinalFullVersion] = ""
 }
 
 const (
@@ -115,6 +116,13 @@ func (s *svn) Run(output chan<- string) (res []string, err error) {
 			s.step.Phase = types.StepFailed
 			return res, err
 		}
+		s.AppendMessage(SvnCommandCheckout)
+		if out, err = s.checkout(); err != nil {
+			klog.V(2).Info(err)
+			s.step.Phase = types.StepFailed
+			return res, err
+		}
+		res = append(res, string(out))
 		s.AppendMessage(SvnCommandLog)
 		if _, err = s.log(1); err != nil {
 			klog.V(2).Info(err)
