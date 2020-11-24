@@ -5,6 +5,7 @@ import (
 	"github.com/nevercase/publisher/pkg/interfaces"
 	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
+	"time"
 )
 
 const (
@@ -43,6 +44,8 @@ func (r *Runner) Run(s *types.Step) (err error) {
 		if v.Step().Name == s.Name {
 			v.Update(s)
 			exist = true
+			t1 := time.Now()
+			s.DurationInMS = 0
 			v.Prepare()
 			res, err := v.Run(r.StreamOutput)
 			if err != nil {
@@ -52,6 +55,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 				return err
 			}
 			// todo update Step information use DeepCopy
+			s.DurationInMS = int32(time.Now().Sub(t1).Milliseconds())
 			_ = res
 		}
 	}
