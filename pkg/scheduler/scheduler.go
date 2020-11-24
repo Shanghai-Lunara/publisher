@@ -267,17 +267,19 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 	klog.Info("handleRunStep name:", req.Step.Name)
 	exist := false
 	newSteps := make([]types.Step, 0)
+	var waitStep *types.Step
 	for _, v := range ri.Steps {
 		if v.Name == req.Step.Name {
 			exist = true
 			// todo send to the Runner, and then sync to all dashboards for updating Runner status
 			v = *req.Step.DeepCopy()
 			v.Phase = types.StepRunning
+			waitStep = v.DeepCopy()
 			// run
-			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
-			}
+			//if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
+			//	klog.V(2).Info(err)
+			//	return nil, err
+			//}
 			// sync for updating
 			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 				klog.V(2).Info(err)
@@ -286,16 +288,23 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		}
 		if exist {
 			// if the exist was true, it would change all the steps' phases to Pending
-			//v.Phase = types.StepPending
-			//if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
-			//	klog.V(2).Info(err)
-			//	return nil, err
-			//}
+			v.Phase = types.StepPending
+			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
+				klog.V(2).Info(err)
+				return nil, err
+			}
 		}
 		newSteps = append(newSteps, v)
 	}
-	ri.Steps = newSteps
-	if !exist {
+	if exist {
+		ri.Steps = newSteps
+		// run the step which waited before
+		go func() {
+			if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, waitStep); err != nil {
+				klog.V(2).Info(err)
+			}
+		}()
+	} else {
 		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
 	}
 	return res, nil
