@@ -76,6 +76,8 @@ message ListRecordsResponse {
   optional ListRecordsRequest namespace = 1;
 
   repeated Record records = 2;
+
+  optional int32 recordNumber = 3;
 }
 
 message ListRunnerRequest {
@@ -228,6 +230,12 @@ message Step {
 
   // Remarks were the extra info after running the Step
   repeated string remarks = 13;
+
+  // SharingData was the map which would be working for sharing data between the different Runners.
+  map<string, string> sharingData = 14;
+
+  // SharingSetting determine whether the Step needing collection different SharingData
+  optional bool sharingSetting = 15;
 }
 
 message Task {

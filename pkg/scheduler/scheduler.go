@@ -254,15 +254,9 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 	for _, v := range ri.Steps {
 		if v.Name == req.Step.Name {
 			exist = true
-			// todo send to the Runner, and then sync to all dashboards for updating Runner status
 			v = *req.Step.DeepCopy()
 			v.Phase = types.StepRunning
 			waitStep = v.DeepCopy()
-			// run
-			//if err = s.runStepToRunner(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
-			//	klog.V(2).Info(err)
-			//	return nil, err
-			//}
 			// sync for updating
 			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
 				klog.V(2).Info(err)
@@ -351,7 +345,7 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 			}
 		case true:
 			//klog.Infof("next true body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
-			// todo check Step Policy for automatic running when the body was types.BodyRunner
+			// check Step Policy for automatic running when the body was types.BodyRunner
 			if v.Policy == types.StepPolicyAuto {
 				if v.Available != types.StepAvailableDisable {
 					// trigger running
@@ -399,7 +393,7 @@ func (s *Scheduler) handleCompleteStep(data []byte) (res []byte, err error) {
 	for _, v := range ri.Steps {
 		if v.Name == req.Step.Name {
 			exist = true
-			// todo send to the Runner, and then sync to all dashboards for updating Runner status
+			// send to the Runner, and then sync to all dashboards for updating Runner status
 			v = req.Step
 			// sync for updating
 			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
@@ -609,9 +603,15 @@ func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error
 		}
 		records = append(records, *record)
 	}
+	var num int
+	if err = db.QueryRow("SELECT count(*) FROM records").Scan(&num); err != nil {
+		klog.V(2).Info(err)
+		return nil, err
+	}
 	response := &types.ListRecordsResponse{
-		Params:  *req,
-		Records: records,
+		Params:       *req,
+		Records:      records,
+		RecordNumber: int32(num),
 	}
 	return response.Marshal()
 }

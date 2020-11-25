@@ -181,6 +181,7 @@ type ListRecordsRequest struct {
 
 // ListRecordsResponse
 type ListRecordsResponse struct {
-	Params  ListRecordsRequest `json:"params" protobuf:"bytes,1,opt,name=namespace"`
-	Records []Record           `json:"records" protobuf:"bytes,2,opt,name=records"`
+	Params       ListRecordsRequest `json:"params" protobuf:"bytes,1,opt,name=namespace"`
+	Records      []Record           `json:"records" protobuf:"bytes,2,opt,name=records"`
+	RecordNumber int32              `json:"recordNumber" protobuf:"varint,3,opt,name=recordNumber"`
 }

@@ -512,6 +512,13 @@ func (in *Step) DeepCopyInto(out *Step) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.SharingData != nil {
+		in, out := &in.SharingData, &out.SharingData
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

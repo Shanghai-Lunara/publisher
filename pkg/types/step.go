@@ -64,6 +64,10 @@ type Step struct {
 	DurationInMS int32 `json:"durationInMs" protobuf:"varint,12,opt,name=durationInMs"`
 	// Remarks were the extra info after running the Step
 	Remarks []string `json:"remarks" protobuf:"bytes,13,opt,name=remarks"`
+	// SharingData was the map which would be working for sharing data between the different Runners.
+	SharingData map[string]string `json:"sharingData" protobuf:"bytes,14,opt,name=sharingData"`
+	// SharingSetting determine whether the Step needing collection different SharingData
+	SharingSetting bool `json:"sharingSetting" protobuf:"bytes,15,opt,name=sharingSetting"`
 }
 
 type UploadFile struct {
