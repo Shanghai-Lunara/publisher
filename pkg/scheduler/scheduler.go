@@ -109,9 +109,10 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		//todo handle error
 		return nil, err
 	}
-	if req.Type.ServiceAPI != types.RegisterRunner && len(res) == 0 {
-		return res, nil
-	}
+	// todo remove
+	//if req.Type.ServiceAPI != types.RegisterRunner && len(res) == 0 {
+	//	return res, nil
+	//}
 	result := &types.Request{
 		Type: reqType,
 		Data: res,
@@ -256,6 +257,10 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 			exist = true
 			v = *req.Step.DeepCopy()
 			v.Phase = types.StepRunning
+			// collecting sharing data
+			if v.SharingSetting == true {
+				s.collectSharingData(g, req.RunnerName, &v)
+			}
 			waitStep = v.DeepCopy()
 			// sync for updating
 			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, &v); err != nil {
@@ -285,6 +290,19 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		return nil, fmt.Errorf(ErrStepWasNotExisted, req.Namespace, req.GroupName, req.RunnerName, req.Step.Name)
 	}
 	return res, nil
+}
+
+func (s *Scheduler) collectSharingData(g *Group, filterRunnerName string, step *types.Step) {
+	for _, v := range g.Runners {
+		if v.Name == filterRunnerName {
+			continue
+		}
+		for _, v2 := range v.Steps {
+			for k, v3 := range v2.SharingData {
+				step.SharingData[k] = v3
+			}
+		}
+	}
 }
 
 type triggerNext struct {
@@ -324,7 +342,6 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 	for _, v := range ri.Steps {
 		switch next {
 		case false:
-			//klog.Infof("next false body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
 			if v.Name == req.Step.Name {
 				exist = true
 				v = req.Step
@@ -344,7 +361,6 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 				}
 			}
 		case true:
-			//klog.Infof("next true body:%s step-name:%s step-phase:%s current-step-name:%s", body, req.Step.Name, req.Step.Phase, v.Name)
 			// check Step Policy for automatic running when the body was types.BodyRunner
 			if v.Policy == types.StepPolicyAuto {
 				if v.Available != types.StepAvailableDisable {
@@ -510,7 +526,7 @@ func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res 
 	for _, v := range ri.Steps {
 		if v.Name == step.Name {
 			exist = true
-			// todo send to the Runner, and then sync to all dashboards for updating Runner status
+			// send to the Runner, and then sync to all dashboards for updating Runner status
 			v = *step.DeepCopy()
 			//v.Phase = types.StepRunning
 			// run
@@ -524,13 +540,6 @@ func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res 
 				return nil, err
 			}
 		}
-		//if exist {
-		//	v.Phase = types.StepPending
-		//	if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, v.DeepCopy()); err != nil {
-		//		klog.V(2).Info(err)
-		//		return nil, err
-		//	}
-		//}
 		newSteps = append(newSteps, v)
 	}
 	ri.Steps = newSteps
