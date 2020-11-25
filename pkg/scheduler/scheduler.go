@@ -259,6 +259,7 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 			v.Phase = types.StepRunning
 			// collecting sharing data
 			if v.SharingSetting == true {
+				klog.Info("trigger collectSharingData name:", v.Name)
 				s.collectSharingData(g, req.RunnerName, &v)
 			}
 			waitStep = v.DeepCopy()
@@ -270,10 +271,12 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 		}
 		if exist {
 			// if the exist was true, it would change all the steps' phases to Pending
-			v.Phase = types.StepPending
-			if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
+			if v.Phase != types.StepPending {
+				v.Phase = types.StepPending
+				if err = s.updateStepToDashboard(req.Namespace, req.GroupName, req.RunnerName, v.DeepCopy()); err != nil {
+					klog.V(2).Info(err)
+					return nil, err
+				}
 			}
 		}
 		newSteps = append(newSteps, v)
@@ -293,6 +296,11 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 }
 
 func (s *Scheduler) collectSharingData(g *Group, filterRunnerName string, step *types.Step) {
+	klog.V(5).Info("step:", *step)
+	klog.V(5).Info("step SharingData:", step.SharingData)
+	if len(step.SharingData) == 0 {
+		step.SharingData = make(map[string]string, 0)
+	}
 	for _, v := range g.Runners {
 		if v.Name == filterRunnerName {
 			continue
@@ -303,6 +311,7 @@ func (s *Scheduler) collectSharingData(g *Group, filterRunnerName string, step *
 			}
 		}
 	}
+	klog.V(5).Info("collectSharingData:", step.SharingData)
 }
 
 type triggerNext struct {
@@ -369,6 +378,7 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 					tn.next = true
 					tn.ri = ri
 					tn.step = v.DeepCopy()
+					tn.step.RunnerName = req.RunnerName
 					klog.V(3).Info("+++++ auto trigger step:", v.Name)
 				}
 			} else {
@@ -521,32 +531,18 @@ func (s *Scheduler) handleLogStream(data []byte) (res []byte, err error) {
 
 func (s *Scheduler) triggerRunStep(ri *types.RunnerInfo, step *types.Step) (res []byte, err error) {
 	klog.Info("triggerRunStep name:", step.Name)
-	exist := false
-	newSteps := make([]types.Step, 0)
-	for _, v := range ri.Steps {
-		if v.Name == step.Name {
-			exist = true
-			// send to the Runner, and then sync to all dashboards for updating Runner status
-			v = *step.DeepCopy()
-			//v.Phase = types.StepRunning
-			// run
-			if err = s.runStepToRunner(ri.Namespace, ri.GroupName, ri.Name, &v); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
-			}
-			// sync for updating
-			if err = s.updateStepToDashboard(ri.Namespace, ri.GroupName, ri.Name, &v); err != nil {
-				klog.V(2).Info(err)
-				return nil, err
-			}
-		}
-		newSteps = append(newSteps, v)
+	req := &types.RunStepRequest{
+		Namespace:  ri.Namespace,
+		GroupName:  ri.GroupName,
+		RunnerName: step.RunnerName,
+		Step:       *step,
 	}
-	ri.Steps = newSteps
-	if !exist {
-		return nil, fmt.Errorf(ErrStepWasNotExisted, ri.Namespace, ri.GroupName, ri.Name, step.Name)
+	data, err := req.Marshal()
+	if err != nil {
+		klog.V(2).Info(err)
+		return nil, err
 	}
-	return res, nil
+	return s.handleRunStep(data)
 }
 
 func (s *Scheduler) recordStep(ri *types.RunnerInfo, step *types.Step) {

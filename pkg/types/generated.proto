@@ -38,8 +38,6 @@ message CompleteStepResponse {
 }
 
 message Group {
-  repeated Task tasks = 1;
-
   repeated RunnerInfo runners = 2;
 }
 
@@ -236,12 +234,6 @@ message Step {
 
   // SharingSetting determine whether the Step needing collection different SharingData
   optional bool sharingSetting = 15;
-}
-
-message Task {
-  optional int32 id = 1;
-
-  map<string, RunnerInfo> runners = 2;
 }
 
 // +Protocol

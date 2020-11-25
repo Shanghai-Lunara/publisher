@@ -49,13 +49,7 @@ type Namespace string
 type GroupName string
 
 type Group struct {
-	Tasks   []Task       `json:"tasks" protobuf:"bytes,1,rep,name=tasks"`
 	Runners []RunnerInfo `json:"runners" protobuf:"bytes,2,rep,name=runners"`
-}
-
-type Task struct {
-	Id      int32                 `json:"id" protobuf:"varint,1,opt,name=id"`
-	Runners map[string]RunnerInfo `json:"runners" protobuf:"bytes,2,opt,name=runners"`
 }
 
 // +Protocol
