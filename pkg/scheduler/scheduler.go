@@ -177,8 +177,13 @@ func (s *Scheduler) handleListRunners(data []byte) (res []byte, err error) {
 	result := &types.ListRunnerResponse{
 		Runners: make([]types.RunnerInfo, 0),
 	}
-	for _, v := range g.Runners {
-		result.Runners = append(result.Runners, *v)
+	keys := make([]string, 0)
+	for k := range g.Runners {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, v := range keys {
+		result.Runners = append(result.Runners, *g.Runners[v])
 	}
 	return result.Marshal()
 }
