@@ -169,8 +169,9 @@ type ListRecordsRequest struct {
 	Namespace  Namespace `json:"namespace" protobuf:"bytes,1,opt,name=namespace"`
 	GroupName  GroupName `json:"groupName" protobuf:"bytes,2,opt,name=groupName"`
 	RunnerName string    `json:"runnerName" protobuf:"bytes,3,opt,name=runnerName"`
-	Page       int32     `json:"page" protobuf:"varint,4,opt,name=page"`
-	Length     int32     `json:"length" protobuf:"varint,5,opt,name=length"`
+	// page specifies the offset of the first row to return
+	Page   int32 `json:"page" protobuf:"varint,4,opt,name=page"`
+	Length int32 `json:"length" protobuf:"varint,5,opt,name=length"`
 }
 
 // ListRecordsResponse
