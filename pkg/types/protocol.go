@@ -66,17 +66,19 @@ type RunnerInfo struct {
 type ServiceAPI string
 
 const (
-	Ping                          ServiceAPI = "Ping"
-	ListNamespace                 ServiceAPI = "ListNamespace"
-	ListGroupName                 ServiceAPI = "ListGroupName"
-	ListRunner                    ServiceAPI = "ListRunner"
-	RegisterRunner                ServiceAPI = "RegisterRunner"
-	UpdateStep                    ServiceAPI = "UpdateStep"
-	RunStep                       ServiceAPI = "RunStep"
-	LogStream                     ServiceAPI = "LogStream"
-	CompleteStep                  ServiceAPI = "CompleteStep"
-	ServiceAPIListRecordsRequest  ServiceAPI = "ListRecordsRequest"
-	ServiceAPIListRecordsResponse ServiceAPI = "ListRecordsResponse"
+	Ping                           ServiceAPI = "Ping"
+	ListNamespace                  ServiceAPI = "ListNamespace"
+	ListGroupName                  ServiceAPI = "ListGroupName"
+	ListRunner                     ServiceAPI = "ListRunner"
+	RegisterRunner                 ServiceAPI = "RegisterRunner"
+	UpdateStep                     ServiceAPI = "UpdateStep"
+	RunStep                        ServiceAPI = "RunStep"
+	LogStream                      ServiceAPI = "LogStream"
+	CompleteStep                   ServiceAPI = "CompleteStep"
+	ServiceAPIListRecordsRequest   ServiceAPI = "ListRecordsRequest"
+	ServiceAPIListRecordsResponse  ServiceAPI = "ListRecordsResponse"
+	ServiceAPIListVersionsRequest  ServiceAPI = "ListVersionRequest"
+	ServiceAPIListVersionsResponse ServiceAPI = "ListVersionResponse"
 )
 
 type Result struct {
@@ -172,6 +174,8 @@ type ListRecordsRequest struct {
 	// page specifies the offset of the first row to return
 	Page   int32 `json:"page" protobuf:"varint,4,opt,name=page"`
 	Length int32 `json:"length" protobuf:"varint,5,opt,name=length"`
+	// IsVersion specifies the filter condition in sql where
+	IsVersion int32 `json:"isVersion" protobuf:"varint,6,opt,name=isVersion"`
 }
 
 // ListRecordsResponse

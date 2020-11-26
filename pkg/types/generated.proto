@@ -64,9 +64,13 @@ message ListRecordsRequest {
 
   optional string runnerName = 3;
 
+  // page specifies the offset of the first row to return
   optional int32 page = 4;
 
   optional int32 length = 5;
+
+  // IsVersion specifies the filter condition in sql where
+  optional int32 isVersion = 6;
 }
 
 // ListRecordsResponse

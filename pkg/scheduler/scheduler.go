@@ -103,6 +103,9 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 	case types.ServiceAPIListRecordsRequest:
 		reqType.ServiceAPI = types.ServiceAPIListRecordsResponse
 		res, err = s.handleListRecordsRequest(req.Data)
+	case types.ServiceAPIListVersionsRequest:
+		reqType.ServiceAPI = types.ServiceAPIListVersionsResponse
+		res, err = s.handleListRecordsRequest(req.Data)
 	}
 	if err != nil {
 		klog.V(2).Info(err)
@@ -595,11 +598,24 @@ func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error
 		return nil, err
 	}
 	db := s.dao.Mysql.Master()
-	rows, err := db.Query("SELECT * FROM records WHERE `namespace` = ? AND `groupName` = ? ORDER BY id DESC LIMIT ?, ?",
-		req.Namespace,
-		req.GroupName,
-		req.Page,
-		req.Length)
+	var (
+		rows *sql.Rows
+	)
+	switch req.IsVersion {
+	case types.RecordDefault:
+		rows, err = db.Query("SELECT * FROM records WHERE `namespace` = ? AND `groupName` = ? ORDER BY id DESC LIMIT ?, ?",
+			req.Namespace,
+			req.GroupName,
+			req.Page,
+			req.Length)
+	case types.RecordVersion:
+		rows, err = db.Query("SELECT * FROM records WHERE `namespace` = ? AND `groupName` = ? AND `stepType` = ? ORDER BY id DESC LIMIT ?, ?",
+			req.Namespace,
+			req.GroupName,
+			req.IsVersion,
+			req.Page,
+			req.Length)
+	}
 	if err != nil {
 		klog.V(2).Info(err)
 		return nil, err
@@ -614,9 +630,17 @@ func (s *Scheduler) handleListRecordsRequest(data []byte) (res []byte, err error
 		records = append(records, *record)
 	}
 	var num int
-	if err = db.QueryRow("SELECT count(*) FROM records").Scan(&num); err != nil {
-		klog.V(2).Info(err)
-		return nil, err
+	switch req.IsVersion {
+	case types.RecordDefault:
+		if err = db.QueryRow("SELECT count(*) FROM records").Scan(&num); err != nil {
+			klog.V(2).Info(err)
+			return nil, err
+		}
+	case types.RecordVersion:
+		if err = db.QueryRow("SELECT count(*) FROM records WHERE `stepType` = ?", req.IsVersion).Scan(&num); err != nil {
+			klog.V(2).Info(err)
+			return nil, err
+		}
 	}
 	response := &types.ListRecordsResponse{
 		Params:       *req,
