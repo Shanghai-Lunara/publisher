@@ -102,7 +102,7 @@ func (c *Client) ping() {
 func (c *Client) readPump() {
 	for {
 		messageType, message, err := c.conn.ReadMessage()
-		klog.Infof("messageType: %d message: %s err:%v\n", messageType, string(message), err)
+		klog.V(5).Infof("messageType: %d message: %s err:%v\n", messageType, string(message), err)
 		if err != nil {
 			klog.Fatal(err)
 			return
