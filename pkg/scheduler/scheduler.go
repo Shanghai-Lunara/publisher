@@ -113,9 +113,14 @@ func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err erro
 		return nil, err
 	}
 	// todo remove
-	//if req.Type.ServiceAPI != types.RegisterRunner && len(res) == 0 {
-	//	return res, nil
-	//}
+	switch req.Type.ServiceAPI {
+	case types.RegisterRunner:
+	case types.UpdateStep:
+		if len(res) == 0 {
+			return res, nil
+		}
+	default:
+	}
 	result := &types.Request{
 		Type: reqType,
 		Data: res,

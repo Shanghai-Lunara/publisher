@@ -112,7 +112,7 @@ func (c *Client) readPump() {
 			klog.Fatal(err)
 			return
 		}
-		var res []byte
+
 		switch req.Type.ServiceAPI {
 		case types.RegisterRunner:
 			if c.pingTimer == false {
@@ -124,14 +124,17 @@ func (c *Client) readPump() {
 			if err = data.Unmarshal(req.Data); err != nil {
 				klog.Fatal(err)
 			}
-			c.currentStep = &data.Step
-			if err = c.runner.Run(&data.Step); err != nil {
-				klog.V(2).Info(err)
-				// todo catching error, update Step's Messages, and report to Scheduler
-			}
-			if err = c.updateStepInformationToScheduler(&data.Step); err != nil {
-				klog.Fatal(err)
-			}
+			go func() {
+				c.currentStep = &data.Step
+				if err = c.runner.Run(&data.Step); err != nil {
+					klog.V(2).Info(err)
+					// todo catching error, update Step's Messages, and report to Scheduler
+				}
+				if err = c.updateStepInformationToScheduler(&data.Step); err != nil {
+					klog.Fatal(err)
+				}
+			}()
+
 		case types.UpdateStep:
 			data := &types.UpdateStepRequest{}
 			if err = data.Unmarshal(req.Data); err != nil {
@@ -141,9 +144,6 @@ func (c *Client) readPump() {
 				klog.V(2).Info(err)
 				// todo catching error, update Step's Messages, and report to Scheduler
 			}
-		}
-		if len(res) > 0 {
-			c.writeChan <- res
 		}
 	}
 }
