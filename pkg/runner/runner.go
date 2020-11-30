@@ -52,6 +52,10 @@ func (r *Runner) Run(s *types.Step) (err error) {
 				klog.V(2).Info(err)
 				// todo report Run error
 				r.StreamOutput <- err.Error()
+				if len(v.Step().Messages) == 0 {
+					v.Step().Messages = make([]string, 0)
+				}
+				v.Step().Messages = append(v.Step().Messages, err.Error())
 				return err
 			}
 			// todo update Step information use DeepCopy
