@@ -44,13 +44,12 @@ func (r *Runner) Run(s *types.Step) (err error) {
 		if v.Step().Name == s.Name {
 			v.Update(s)
 			exist = true
-			t1 := time.Now()
+			start := time.Now()
 			s.DurationInMS = 0
 			v.Prepare()
 			res, err := v.Run(r.StreamOutput)
 			if err != nil {
 				klog.V(2).Info(err)
-				// todo report Run error
 				r.StreamOutput <- err.Error()
 				if len(v.Step().Messages) == 0 {
 					v.Step().Messages = make([]string, 0)
@@ -58,8 +57,7 @@ func (r *Runner) Run(s *types.Step) (err error) {
 				v.Step().Messages = append(v.Step().Messages, err.Error())
 				return err
 			}
-			// todo update Step information use DeepCopy
-			v.Step().DurationInMS = int32(time.Now().Sub(t1).Milliseconds())
+			v.Step().DurationInMS = int32(time.Now().Sub(start).Milliseconds())
 			_ = res
 		}
 	}
