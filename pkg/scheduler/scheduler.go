@@ -282,7 +282,7 @@ func (s *Scheduler) handleRunStep(data []byte) (res []byte, err error) {
 				return nil, err
 			}
 		}
-		if exist {
+		if exist && v.Name != req.Step.Name {
 			// if the exist was true, it would change all the steps' phases to Pending
 			if v.Phase != types.StepPending {
 				v.Phase = types.StepPending
