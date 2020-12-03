@@ -42,6 +42,7 @@ type RunnerType string
 const (
 	RunnerTypeClient RunnerType = "client"
 	RunnerTypeServer RunnerType = "server"
+	RunnerTypeRobot  RunnerType = "robot"
 )
 
 type Namespace string

@@ -384,18 +384,16 @@ func (s *Scheduler) handleUpdateStep(data []byte, body types.Body) (res []byte, 
 			}
 		case true:
 			// check Step Policy for automatic running when the body was types.BodyRunner
-			if v.Policy == types.StepPolicyAuto {
-				if v.Available != types.StepAvailableDisable {
+			if v.Available != types.StepAvailableDisable {
+				next = false
+				if v.Policy == types.StepPolicyAuto {
 					// trigger running
-					next = false
 					tn.next = true
 					tn.ri = ri
 					tn.step = v.DeepCopy()
 					tn.step.RunnerName = req.RunnerName
 					klog.V(3).Info("+++++ auto trigger step:", v.Name)
 				}
-			} else {
-				next = false
 			}
 		}
 		newSteps = append(newSteps, v)
