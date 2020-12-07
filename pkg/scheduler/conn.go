@@ -2,16 +2,15 @@ package scheduler
 
 import (
 	"context"
+	"github.com/gorilla/websocket"
 	"github.com/nevercase/publisher/pkg/conf"
 	"github.com/nevercase/publisher/pkg/dao"
+	"github.com/nevercase/publisher/pkg/types"
+	"k8s.io/klog/v2"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/gorilla/websocket"
-	"github.com/nevercase/publisher/pkg/types"
-	"k8s.io/klog/v2"
 )
 
 const (

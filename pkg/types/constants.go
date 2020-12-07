@@ -35,6 +35,9 @@ const (
 
 	// version flag
 	VersionFlag = "VersionFlag"
+
+	// Robot
+	RobotDurationInMs = "Robot_Duration_In_MS"
 )
 
 const (
