@@ -2,6 +2,17 @@
 PublisherService:
   listenPort: 6969
 
+Projects:
+  - namespace: ns1
+    groups:
+      - name: update-data-robot
+  - namespace: ns-2
+    groups:
+      - name: update-data-robot
+  - namespace: ns-3
+    groups:
+      - name: cn-1
+
 Mysql:
   master:
     host: mo-data-master

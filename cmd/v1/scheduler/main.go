@@ -8,17 +8,12 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var addr string
-
-func init() {
-	flag.StringVar(&addr, "addr", ":6969", "The address of the Publisher.")
-}
-
 func main() {
+	var configPath = flag.String("configPath", "conf.yml", "configuration file path")
 	klog.InitFlags(nil)
 	flag.Parse()
 	stopCh := signals.SetupSignalHandler()
-	s := scheduler.NewServer(conf.Init())
+	s := scheduler.NewServer(conf.Init(*configPath))
 	<-stopCh
 	s.Close()
 }

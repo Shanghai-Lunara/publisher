@@ -33,7 +33,7 @@ func NewConnections(ctx context.Context, c *conf.Config) *connections {
 		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
-	cs.scheduler = NewScheduler(cs.broadcast, dao.New(&c.Mysql))
+	cs.scheduler = NewScheduler(cs.broadcast, dao.New(&c.Mysql), c)
 	go cs.remove()
 	go cs.broadcastToDashboard()
 	return cs

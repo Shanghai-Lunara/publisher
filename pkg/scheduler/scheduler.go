@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Shanghai-Lunara/publisher/pkg/conf"
 	"github.com/Shanghai-Lunara/publisher/pkg/dao"
 	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"k8s.io/klog/v2"
@@ -12,34 +13,21 @@ import (
 	"time"
 )
 
-const (
-	NamespaceHelixSaga types.Namespace = "helix-saga"
-	NamespaceHelix2    types.Namespace = "helix-2"
-	NamespaceHamster   types.Namespace = "hamster"
-)
-
-const (
-	GroupNameCNLeiTing types.GroupName = "cn-leiting"
-	GroupNameTWSpade   types.GroupName = "tw-spade"
-)
-
-func NewScheduler(broadcast chan *broadcast, d *dao.Dao) *Scheduler {
+func NewScheduler(broadcast chan *broadcast, d *dao.Dao, c *conf.Config) *Scheduler {
 	s := &Scheduler{
 		items:     make(map[types.Namespace]*Groups, 0),
 		broadcast: broadcast,
 		dao:       d,
 	}
-	s.items[NamespaceHelixSaga] = &Groups{
-		items: make(map[types.GroupName]*Group, 0),
-	}
-	s.items[NamespaceHelixSaga].items[GroupNameCNLeiTing] = &Group{
-		Runners: make(map[string]*types.RunnerInfo, 0),
-	}
-	s.items[NamespaceHelix2] = &Groups{
-		items: make(map[types.GroupName]*Group, 0),
-	}
-	s.items[NamespaceHamster] = &Groups{
-		items: make(map[types.GroupName]*Group, 0),
+	for _, v := range c.Projects {
+		s.items[types.Namespace(v.Namespace)] = &Groups{
+			items: make(map[types.GroupName]*Group, 0),
+		}
+		for _, v2 := range v.Groups {
+			s.items[types.Namespace(v.Namespace)].items[types.GroupName(v2.Name)] = &Group{
+				Runners: make(map[string]*types.RunnerInfo, 0),
+			}
+		}
 	}
 	return s
 }
