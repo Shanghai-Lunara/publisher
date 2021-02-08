@@ -1,4 +1,4 @@
-module github.com/nevercase/publisher
+module github.com/Shanghai-Lunara/publisher
 
 go 1.15
 

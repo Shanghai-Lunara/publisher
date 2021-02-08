@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Shanghai-Lunara/go-gpt/pkg/operator"
-	"github.com/nevercase/publisher/pkg/types"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"k8s.io/klog/v2"
 )
 

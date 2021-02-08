@@ -2,7 +2,7 @@ package conf
 
 import (
 	"flag"
-	"github.com/nevercase/publisher/pkg/dao"
+	"github.com/Shanghai-Lunara/publisher/pkg/dao"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"k8s.io/klog"

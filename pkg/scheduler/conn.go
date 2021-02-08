@@ -2,10 +2,10 @@ package scheduler
 
 import (
 	"context"
+	"github.com/Shanghai-Lunara/publisher/pkg/conf"
+	"github.com/Shanghai-Lunara/publisher/pkg/dao"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"github.com/gorilla/websocket"
-	"github.com/nevercase/publisher/pkg/conf"
-	"github.com/nevercase/publisher/pkg/dao"
-	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"net/http"
 	"sync"

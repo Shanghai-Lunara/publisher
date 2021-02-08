@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nevercase/publisher/pkg/interfaces"
-	"github.com/nevercase/publisher/pkg/types"
+	"github.com/Shanghai-Lunara/publisher/pkg/interfaces"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 )
 
 var fakeGitOperator = NewGit("/Users/nevermore/go/src/github.com/Shanghai-Lunara/client-tool", "main")

@@ -2,9 +2,9 @@ package runner
 
 import (
 	"context"
+	"github.com/Shanghai-Lunara/publisher/pkg/scheduler"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"github.com/gorilla/websocket"
-	"github.com/nevercase/publisher/pkg/scheduler"
-	"github.com/nevercase/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"net/url"
 	"time"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/Shanghai-Lunara/publisher/pkg/conf"
+	"github.com/Shanghai-Lunara/publisher/pkg/scheduler"
 	"github.com/nevercase/k8s-controller-custom-resource/pkg/signals"
-	"github.com/nevercase/publisher/pkg/conf"
-	"github.com/nevercase/publisher/pkg/scheduler"
 	"k8s.io/klog/v2"
 )
 

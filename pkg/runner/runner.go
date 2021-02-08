@@ -2,8 +2,8 @@ package runner
 
 import (
 	"fmt"
-	"github.com/nevercase/publisher/pkg/interfaces"
-	"github.com/nevercase/publisher/pkg/types"
+	"github.com/Shanghai-Lunara/publisher/pkg/interfaces"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"time"
 )

@@ -1,6 +1,6 @@
 package interfaces
 
-import "github.com/nevercase/publisher/pkg/types"
+import "github.com/Shanghai-Lunara/publisher/pkg/types"
 
 type StepOperator interface {
 	Step() *types.Step

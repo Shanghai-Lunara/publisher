@@ -3,8 +3,8 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"github.com/nevercase/publisher/pkg/conf"
-	"github.com/nevercase/publisher/pkg/types"
+	"github.com/Shanghai-Lunara/publisher/pkg/conf"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"k8s.io/klog/v2"
 	"net"
 	"net/http"

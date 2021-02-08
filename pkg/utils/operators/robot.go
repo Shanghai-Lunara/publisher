@@ -2,7 +2,7 @@ package operators
 
 import (
 	"fmt"
-	"github.com/nevercase/publisher/pkg/types"
+	"github.com/Shanghai-Lunara/publisher/pkg/types"
 )
 
 func NewRobot(p types.StepPolicy, durationInMs int64) *robot {
@@ -23,7 +23,7 @@ func NewRobot(p types.StepPolicy, durationInMs int64) *robot {
 	}
 }
 
-// robot implements github.com/nevercase/publisher/pkg/interfaces.StepOperator
+// robot implements github.com/Shanghai-Lunara/publisher/pkg/interfaces.StepOperator
 type robot struct {
 	step        *types.Step
 	prepareFunc func()
