@@ -5,7 +5,7 @@ export GOPATH=`go env | grep -i gopath | awk '{split($0,a,"\""); print a[2]}'`
 GENS="$1"
 
 # The working directory which was the root path of our project.
-ROOT_PACKAGE="github.com/nevercase/publisher"
+ROOT_PACKAGE="github.com/Shanghai-Lunara/publisher"
 # API Group
 CUSTOM_RESOURCE_NAME="publisher"
 # API Version

@@ -19,7 +19,7 @@ limitations under the License.
 
 syntax = 'proto2';
 
-package github.com.nevercase.publisher.pkg.types;
+package github.com.Shanghai_Lunara.publisher.pkg.types;
 
 // Package-wide variables from generator "generated".
 option go_package = "types";
