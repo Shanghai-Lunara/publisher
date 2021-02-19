@@ -26,6 +26,7 @@ func NewScheduler(broadcast chan *broadcast, d *dao.Dao, c *conf.Config) *Schedu
 		for _, v2 := range v.Groups {
 			s.items[types.Namespace(v.Namespace)].items[types.GroupName(v2.Name)] = &Group{
 				Runners: make(map[string]*types.RunnerInfo, 0),
+				Ids:     make(map[int32]string, 0),
 			}
 		}
 	}
@@ -45,6 +46,20 @@ type Groups struct {
 
 type Group struct {
 	Runners map[string]*types.RunnerInfo `json:"runners" protobuf:"bytes,1,opt,name=runners"`
+	Ids     map[int32]string
+}
+
+func (s *Scheduler) removeRunner(id int32) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, v := range s.items {
+		for _, v2 := range v.items {
+			if name, ok := v2.Ids[id]; ok {
+				delete(v2.Runners, name)
+				delete(v2.Ids, id)
+			}
+		}
+	}
 }
 
 func (s *Scheduler) handle(message []byte, clientId int32) (res []byte, err error) {
@@ -199,6 +214,7 @@ func (s *Scheduler) handleRegisterRunner(data []byte, clientId int32) (res []byt
 	defer s.mu.Unlock()
 	if _, ok := g.Runners[req.RunnerInfo.Name]; !ok {
 		g.Runners[req.RunnerInfo.Name] = &req.RunnerInfo
+		g.Ids[clientId] = req.RunnerInfo.Name
 	}
 	s.broadcast <- &broadcast{
 		bt:         broadcastTypeBindRunner,

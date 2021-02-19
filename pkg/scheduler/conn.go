@@ -217,6 +217,7 @@ func (c *conn) close() {
 	c.closeOnce.Do(func() {
 		c.cancel()
 		c.removedChan <- c.id
+		c.scheduler.removeRunner(c.id)
 		if err := c.conn.Close(); err != nil {
 			klog.V(2).Info(err)
 		}
