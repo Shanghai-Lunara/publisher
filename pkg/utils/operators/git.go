@@ -149,7 +149,7 @@ func (g *Git) Commit(output chan<- string, source, branch, hash string) (res []b
 		`cd %s && Git commit -a -m "Automatic sync data by publisher-robot
 Srouce: %s
 Branch: %s
-Commit: %s"`,
+Hash: %s"`,
 		g.step.Envs[types.PublisherProjectDir],
 		source,
 		branch,
