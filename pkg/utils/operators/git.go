@@ -161,17 +161,19 @@ Commit: %s"`,
 func (g *Git) source() (res []byte, err error) {
 	commands := fmt.Sprintf(`cd %s && cat .git/config | grep url`, g.step.Envs[types.PublisherProjectDir])
 	res, err = DefaultExec(commands)
-	if err != nil {
+	if err == nil {
 		g.step.Envs[types.PublisherGitSource] = string(res)
 	}
+	klog.Info("g.step.Envs[types.PublisherGitSource]:", g.step.Envs[types.PublisherGitSource])
 	return res, err
 }
 
 func (g *Git) getCommitHash() (res []byte, err error) {
 	commands := fmt.Sprintf(`cd %s && git log -p -1 | grep commit`, g.step.Envs[types.PublisherProjectDir])
 	res, err = DefaultExec(commands)
-	if err != nil {
+	if err == nil {
 		g.step.Envs[types.PublisherGitCommitHash] = string(res)
 	}
+	klog.Info("g.step.Envs[types.PublisherGitCommitHash]:", g.step.Envs[types.PublisherGitCommitHash])
 	return res, err
 }
