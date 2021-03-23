@@ -144,16 +144,16 @@ func (g *Git) Push(output chan<- string) (res []byte, err error) {
 	return ExecWithStreamOutput(commands, output)
 }
 
-func (g *Git) Commit(output chan<- string) (res []byte, err error) {
+func (g *Git) Commit(output chan<- string, source, branch, hash string) (res []byte, err error) {
 	commands := fmt.Sprintf(
 		`cd %s && Git commit -a -m "Automatic sync data by publisher-robot
 Srouce: %s
 Branch: %s
 Commit: %s"`,
 		g.step.Envs[types.PublisherProjectDir],
-		g.step.Envs[types.PublisherGitSource],
-		g.step.Envs[types.PublisherGitBranch],
-		g.step.Envs[types.PublisherGitCommitHash])
+		source,
+		branch,
+		hash)
 	klog.Info("Git Commit commands:", commands)
 	return ExecWithStreamOutput(commands, output)
 }
