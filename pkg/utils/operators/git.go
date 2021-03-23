@@ -170,7 +170,7 @@ func (g *Git) source() (res []byte, err error) {
 }
 
 func (g *Git) getCommitHash() (res []byte, err error) {
-	commands := fmt.Sprintf(`cd %s && git log -p -1 | grep commit ｜ grep -v Hash`, g.step.Envs[types.PublisherProjectDir])
+	commands := fmt.Sprintf(`cd %s && git log -p -1 | grep commit ｜ grep -v -i hash`, g.step.Envs[types.PublisherProjectDir])
 	res, err = DefaultExec(commands)
 	if err == nil {
 		g.step.Envs[types.PublisherGitCommitHash] = string(res)
