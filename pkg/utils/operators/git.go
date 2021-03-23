@@ -124,12 +124,12 @@ func (g *Git) pull() (res []byte, err error) {
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *Git) Push() (res []byte, err error) {
+func (g *Git) Push(output chan<- string) (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && Git push", g.step.Envs[types.PublisherProjectDir])
-	return ExecWithStreamOutput(commands, g.output)
+	return ExecWithStreamOutput(commands, output)
 }
 
-func (g *Git) Commit() (res []byte, err error) {
+func (g *Git) Commit(output chan<- string) (res []byte, err error) {
 	commands := fmt.Sprintf(`cd %s && Git commit -a -m "Automatic sync data by publisher-robot" `, g.step.Envs[types.PublisherProjectDir])
-	return ExecWithStreamOutput(commands, g.output)
+	return ExecWithStreamOutput(commands, output)
 }
