@@ -5,16 +5,15 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Shanghai-Lunara/publisher/pkg/interfaces"
 	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"k8s.io/klog/v2"
 )
 
-func NewGit(gitDir string, branchName string) interfaces.StepOperator {
+func NewGit(gitDir string, branchName string) *Git {
 	envs := make(map[string]string, 0)
 	envs[types.PublisherProjectDir] = gitDir
 	envs[types.PublisherGitBranch] = branchName
-	return &git{
+	return &Git{
 		output: make(chan<- string, 4096),
 		step: &types.Step{
 			Id:             0,
@@ -30,24 +29,24 @@ func NewGit(gitDir string, branchName string) interfaces.StepOperator {
 	}
 }
 
-type git struct {
+type Git struct {
 	output chan<- string
 	step   *types.Step
 }
 
-func (g *git) Step() *types.Step {
+func (g *Git) Step() *types.Step {
 	return g.step
 }
 
-func (g *git) Update(s *types.Step) {
+func (g *Git) Update(s *types.Step) {
 	g.step = s.DeepCopy()
 }
 
-func (g *git) Prepare() {
+func (g *Git) Prepare() {
 
 }
 
-func (g *git) Run(output chan<- string) (res []string, err error) {
+func (g *Git) Run(output chan<- string) (res []string, err error) {
 	g.output = output
 	g.step.Phase = types.StepRunning
 	var out []byte
@@ -76,13 +75,13 @@ func (g *git) Run(output chan<- string) (res []string, err error) {
 	return res, nil
 }
 
-func (g *git) cd() (res []byte, err error) {
+func (g *Git) cd() (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s", g.step.Envs[types.PublisherProjectDir])
 	return DefaultExec(commands)
 }
 
-func (g *git) branch() (res string, err error) {
-	commands := fmt.Sprintf("cd %s && git branch -a | grep '*'", g.step.Envs[types.PublisherProjectDir])
+func (g *Git) branch() (res string, err error) {
+	commands := fmt.Sprintf("cd %s && Git branch -a | grep '*'", g.step.Envs[types.PublisherProjectDir])
 	t, err := DefaultExec(commands)
 	if err != nil {
 		klog.V(2).Info(err)
@@ -103,34 +102,34 @@ func (g *git) branch() (res string, err error) {
 	return name, nil
 }
 
-func (g *git) fetchAll() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && git fetch --all && git fetch -p", g.step.Envs[types.PublisherProjectDir])
+func (g *Git) fetchAll() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git fetch --all && Git fetch -p", g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *git) revert() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && git add --all && git checkout -f && git reset --hard", g.step.Envs[types.PublisherProjectDir])
+func (g *Git) revert() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git add --all && Git checkout -f && Git reset --hard", g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *git) checkout() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && git checkout -B %s --track remotes/origin/%s",
+func (g *Git) checkout() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git checkout -B %s --track remotes/origin/%s",
 		g.step.Envs[types.PublisherProjectDir], g.step.Envs[types.PublisherGitBranch], g.step.Envs[types.PublisherGitBranch])
-	klog.Info("git checkout commands:", commands)
+	klog.Info("Git checkout commands:", commands)
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *git) pull() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && git pull", g.step.Envs[types.PublisherProjectDir])
+func (g *Git) pull() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git pull", g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *git) Push() (res []byte, err error) {
-	commands := fmt.Sprintf("cd %s && git push", g.step.Envs[types.PublisherProjectDir])
+func (g *Git) Push() (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git push", g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, g.output)
 }
 
-func (g *git) Commit() (res []byte, err error) {
-	commands := fmt.Sprintf(`cd %s && git commit -a -m "Automatic sync data by publisher-robot" `, g.step.Envs[types.PublisherProjectDir])
+func (g *Git) Commit() (res []byte, err error) {
+	commands := fmt.Sprintf(`cd %s && Git commit -a -m "Automatic sync data by publisher-robot" `, g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, g.output)
 }
