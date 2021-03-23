@@ -12,7 +12,9 @@ const (
 
 	PublisherProjectDir = "PUBLISHER_PROJECT_DIR"
 	// git config
-	PublisherGitBranch = "PUBLISHER_GIT_BRANCH"
+	PublisherGitBranch     = "PUBLISHER_GIT_BRANCH"
+	PublisherGitSource     = "PUBLISHER_GIT_SOURCE"
+	PublisherGitCommitHash = "PUBLISHER_GIT_COMMIT_HASH"
 
 	// ftp config
 	PublisherFtpHost     = "ftp_host"

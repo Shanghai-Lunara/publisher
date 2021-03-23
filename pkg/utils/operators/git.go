@@ -70,6 +70,16 @@ func (g *Git) Run(output chan<- string) (res []string, err error) {
 		g.step.Phase = types.StepFailed
 		return res, err
 	}
+	if out, err = g.source(); err != nil {
+		klog.V(2).Info(err)
+		g.step.Phase = types.StepFailed
+		return res, err
+	}
+	if out, err = g.getCommitHash(); err != nil {
+		klog.V(2).Info(err)
+		g.step.Phase = types.StepFailed
+		return res, err
+	}
 	res = append(res, string(out))
 	g.step.Phase = types.StepSucceeded
 	return res, nil
@@ -135,6 +145,33 @@ func (g *Git) Push(output chan<- string) (res []byte, err error) {
 }
 
 func (g *Git) Commit(output chan<- string) (res []byte, err error) {
-	commands := fmt.Sprintf(`cd %s && Git commit -a -m "Automatic sync data by publisher-robot" `, g.step.Envs[types.PublisherProjectDir])
+	commands := fmt.Sprintf(
+		`cd %s && Git commit -a -m "Automatic sync data by publisher-robot
+Srouce: %s
+Branch: %s
+Commit: %s"`,
+		g.step.Envs[types.PublisherProjectDir],
+		g.step.Envs[types.PublisherGitSource],
+		g.step.Envs[types.PublisherGitBranch],
+		g.step.Envs[types.PublisherGitCommitHash])
+	klog.Info("Git Commit commands:", commands)
 	return ExecWithStreamOutput(commands, output)
+}
+
+func (g *Git) source() (res []byte, err error) {
+	commands := fmt.Sprintf(`cd %s && cat .git/config | grep url`, g.step.Envs[types.PublisherProjectDir])
+	res, err = ExecWithStreamOutput(commands, g.output)
+	if err != nil {
+		g.step.Envs[types.PublisherGitSource] = string(res)
+	}
+	return res, err
+}
+
+func (g *Git) getCommitHash() (res []byte, err error) {
+	commands := fmt.Sprintf(`cd %s && git log -p -1 | grep commit`, g.step.Envs[types.PublisherProjectDir])
+	res, err = ExecWithStreamOutput(commands, g.output)
+	if err != nil {
+		g.step.Envs[types.PublisherGitCommitHash] = string(res)
+	}
+	return res, err
 }
