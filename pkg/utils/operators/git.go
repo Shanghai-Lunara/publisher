@@ -144,13 +144,14 @@ func (g *Git) Push(output chan<- string) (res []byte, err error) {
 	return ExecWithStreamOutput(commands, output)
 }
 
-func (g *Git) Commit(output chan<- string, source, branch, hash string) (res []byte, err error) {
+func (g *Git) Commit(output chan<- string, content, source, branch, hash string) (res []byte, err error) {
 	commands := fmt.Sprintf(
-		`cd %s && Git commit -a -m "Automatic sync data by publisher-robot
+		`cd %s && Git commit -a -m "Automatic sync %s by lunara-publisher-robot
 Srouce: %s
 Branch: %s
 Hash: %s"`,
 		g.step.Envs[types.PublisherProjectDir],
+		content,
 		source,
 		branch,
 		hash)
