@@ -124,6 +124,11 @@ func (g *Git) pull() (res []byte, err error) {
 	return ExecWithStreamOutput(commands, g.output)
 }
 
+func (g *Git) AddAll(output chan<- string) (res []byte, err error) {
+	commands := fmt.Sprintf("cd %s && Git add --all", g.step.Envs[types.PublisherProjectDir])
+	return ExecWithStreamOutput(commands, output)
+}
+
 func (g *Git) Push(output chan<- string) (res []byte, err error) {
 	commands := fmt.Sprintf("cd %s && Git push", g.step.Envs[types.PublisherProjectDir])
 	return ExecWithStreamOutput(commands, output)
