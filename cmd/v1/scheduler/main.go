@@ -15,5 +15,6 @@ func main() {
 	stopCh := signals.SetupSignalHandler()
 	s := scheduler.NewServer(conf.Init(*configPath))
 	<-stopCh
-	s.Close()
+	s.Shutdown()
+	<-stopCh
 }

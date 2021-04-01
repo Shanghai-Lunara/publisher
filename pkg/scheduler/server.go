@@ -3,36 +3,69 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"github.com/Shanghai-Lunara/pkg/zaplogger"
 	"github.com/Shanghai-Lunara/publisher/pkg/conf"
 	"github.com/Shanghai-Lunara/publisher/pkg/types"
-	"k8s.io/klog/v2"
-	"net"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type Server struct {
 	connections *connections
-}
-
-func (s *Server) initWSServer(addr string) {
-	klog.Info("initWSService")
-	http.HandleFunc(types.WebsocketHandlerRunner, s.connections.handlerRunner)
-	http.HandleFunc(types.WebsocketHandlerDashboard, s.connections.handlerDashboard)
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		klog.Fatal(err)
-	}
-	klog.Fatal(http.Serve(l, nil))
-}
-
-func (s *Server) Close() {
-
+	login       *Login
+	httpServer  *http.Server
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 func NewServer(c *conf.Config) *Server {
+	ctx, cancel := context.WithCancel(context.Background())
 	s := &Server{
 		connections: NewConnections(context.Background(), c),
+		ctx:         ctx,
+		cancel:      cancel,
 	}
-	go s.initWSServer(fmt.Sprintf(":%d", c.PublisherService.ListenPort))
+	router := gin.New()
+	store := cookie.NewStore([]byte("secret"))
+	router.Use(sessions.Sessions("sessionStore", store))
+	router.Use(cors.Default())
+	router.GET(types.HttpHandlerLogin, s.login.LoginHandler)
+	router.GET(types.HttpHandlerLogout, s.login.LogoutHandler)
+	router.GET(types.WebsocketHandlerDashboard, s.dashboard)
+	router.GET(types.WebsocketHandlerRunner, s.runner)
+	server := &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", c.PublisherService.ListenPort),
+		Handler: router,
+	}
+	s.httpServer = server
+	go func() {
+		if err := s.httpServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				zaplogger.Sugar().Info("Server closed under request")
+			} else {
+				zaplogger.Sugar().Error("Server closed unexpected err:", err)
+			}
+		}
+	}()
 	return s
+}
+
+func (s *Server) dashboard(c *gin.Context) {
+	a, err := c.Cookie("test-cookies")
+	if err != nil {
+		zaplogger.Sugar().Error(err)
+	}
+	zaplogger.Sugar().Infow("print cookie", "value", a)
+	s.connections.handlerDashboard(c.Writer, c.Request)
+}
+
+func (s *Server) runner(c *gin.Context) {
+	s.connections.handlerRunner(c.Writer, c.Request)
+}
+
+func (s *Server) Shutdown() {
+	s.cancel()
 }

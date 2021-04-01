@@ -10,6 +10,9 @@ const (
 	WebsocketHandlerRunner    = "/runner"
 	WebsocketHandlerDashboard = "/dashboard"
 
+	HttpHandlerLogin  = "/login"
+	HttpHandlerLogout = "/logout"
+
 	PublisherProjectDir = "PUBLISHER_PROJECT_DIR"
 	// git config
 	PublisherGitBranch     = "PUBLISHER_GIT_BRANCH"

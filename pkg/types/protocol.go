@@ -185,3 +185,16 @@ type ListRecordsResponse struct {
 	Records      []Record           `json:"records" protobuf:"bytes,2,opt,name=records"`
 	RecordNumber int32              `json:"recordNumber" protobuf:"varint,3,opt,name=recordNumber"`
 }
+
+type LoginRequest struct {
+	Account string `json:"account"`
+	Pwd     string `json:"pwd"`
+}
+
+type LogoutRequest struct {
+}
+
+type HttpResponse struct {
+	Code    int32  `json:"code"`
+	Message string `json:"message"`
+}
