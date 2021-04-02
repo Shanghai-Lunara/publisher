@@ -8,7 +8,7 @@ import (
 const (
 	// ws
 	WebsocketHandlerRunner    = "/runner"
-	WebsocketHandlerDashboard = "/dashboard"
+	WebsocketHandlerDashboard = "/dashboard/:token"
 
 	HttpHandlerLogin  = "/login"
 	HttpHandlerLogout = "/logout"

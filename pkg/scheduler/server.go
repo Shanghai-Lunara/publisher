@@ -60,7 +60,7 @@ func NewServer(c *conf.Config, rbacPath string) *Server {
 }
 
 func (s *Server) dashboard(c *gin.Context) {
-	zaplogger.Sugar().Infow("dashboard print token", "value", c.Request.Header.Get("Token"))
+	zaplogger.Sugar().Infow("dashboard print token", "token", c.Param("token"))
 	s.connections.handlerDashboard(c.Writer, c.Request)
 }
 
