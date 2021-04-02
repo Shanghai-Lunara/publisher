@@ -29,16 +29,16 @@ type MysqlPoolConfig struct {
 }
 
 type MysqlPool struct {
-	conf  *MysqlPoolConfig
+	conf   *MysqlPoolConfig
 	master *sql.DB
-	slave *sql.DB
+	slave  *sql.DB
 }
 
 func NewMysqlPool(conf *MysqlPoolConfig) *MysqlPool {
 	m := &MysqlPool{
-		conf:  conf,
+		conf:   conf,
 		master: &sql.DB{},
-		slave: &sql.DB{},
+		slave:  &sql.DB{},
 	}
 	// Master
 	dsn := fmt.Sprintf(DBDSNFormat, conf.Master.User, conf.Master.Password, conf.Master.Host, conf.Master.Port, conf.Master.Database)
@@ -71,4 +71,8 @@ func (mp *MysqlPool) Master() *sql.DB {
 
 func (mp *MysqlPool) Slave() *sql.DB {
 	return mp.slave
+}
+
+func (mp *MysqlPool) MasterDsn() string {
+	return fmt.Sprintf(DBDSNFormat, mp.conf.Master.User, mp.conf.Master.Password, mp.conf.Master.Host, mp.conf.Master.Port, mp.conf.Master.Database)
 }

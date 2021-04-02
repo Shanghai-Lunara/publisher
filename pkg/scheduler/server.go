@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Shanghai-Lunara/pkg/zaplogger"
 	"github.com/Shanghai-Lunara/publisher/pkg/conf"
+	"github.com/Shanghai-Lunara/publisher/pkg/dao"
 	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -21,13 +22,18 @@ type Server struct {
 	cancel      context.CancelFunc
 }
 
-func NewServer(c *conf.Config) *Server {
+func NewServer(c *conf.Config, rbacPath string) *Server {
+	zaplogger.Sugar().Info(1111111)
 	ctx, cancel := context.WithCancel(context.Background())
+	zaplogger.Sugar().Info(22222)
+	_ = dao.New(&c.Mysql)
 	s := &Server{
 		connections: NewConnections(context.Background(), c),
+		login:       NewLogin(rbacPath),
 		ctx:         ctx,
 		cancel:      cancel,
 	}
+	zaplogger.Sugar().Info(33333)
 	router := gin.New()
 	store := cookie.NewStore([]byte("secret"))
 	router.Use(sessions.Sessions("sessionStore", store))
@@ -54,11 +60,7 @@ func NewServer(c *conf.Config) *Server {
 }
 
 func (s *Server) dashboard(c *gin.Context) {
-	a, err := c.Cookie("test-cookies")
-	if err != nil {
-		zaplogger.Sugar().Error(err)
-	}
-	zaplogger.Sugar().Infow("print cookie", "value", a)
+	zaplogger.Sugar().Infow("dashboard print token", "value", c.Request.Header.Get("Token"))
 	s.connections.handlerDashboard(c.Writer, c.Request)
 }
 

@@ -13,11 +13,11 @@ import (
 	"time"
 )
 
-func NewScheduler(broadcast chan *broadcast, d *dao.Dao, c *conf.Config) *Scheduler {
+func NewScheduler(broadcast chan *broadcast, c *conf.Config) *Scheduler {
 	s := &Scheduler{
 		items:     make(map[types.Namespace]*Groups, 0),
 		broadcast: broadcast,
-		dao:       d,
+		dao:       dao.Get(),
 	}
 	for _, v := range c.Projects {
 		s.items[types.Namespace(v.Namespace)] = &Groups{

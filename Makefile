@@ -24,4 +24,4 @@ dc:
 	rm -rf vendor
 
 run:
-	go run ./cmd/v1/scheduler/main.go -v=4 -configPath=./cmd/v1/scheduler/fake.yaml
+	go run ./cmd/v1/scheduler/main.go -v=4 -configPath=./cmd/v1/scheduler/fake.yaml -rbacPath=./cmd/v1/scheduler/rbac_mode.conf

@@ -1,24 +1,45 @@
 package scheduler
 
 import (
-	"fmt"
 	"github.com/Shanghai-Lunara/pkg/zaplogger"
 	"github.com/gin-gonic/gin"
-	"math/rand"
 	"net/http"
 )
 
 type Login struct {
 }
 
-func (l *Login) LoginHandler(c *gin.Context) {
-	a, err := c.Cookie("test-cookies")
-	if err != nil {
-		zaplogger.Sugar().Error(err)
-	}
-	zaplogger.Sugar().Infow("print cookie", "value", a)
+func NewLogin(rbacPath string) *Login {
+	l := &Login{}
+	go func() {
+		//a, err := gormadapter.NewAdapter("mysql", dao.Get().Mysql.MasterDsn())
+		//if err != nil {
+		//	zaplogger.Sugar().Fatal(err)
+		//}
+		//e, err := casbin.NewEnforcer(rbacPath, a)
+		//if err != nil {
+		//	zaplogger.Sugar().Fatal(err)
+		//}
+		//
+		//// Load the policy from DB.
+		//e.LoadPolicy()
+		//
+		//// Check the permission.
+		//e.Enforce("alice", "data1", "read")
+		//
+		//// Modify the policy.
+		//// e.AddPolicy(...)
+		//// e.RemovePolicy(...)
+		//
+		//// Save the policy back to DB.
+		//e.SavePolicy()
+	}()
 
-	c.SetCookie("test-cookies", fmt.Sprintf("random-cookie-%d", rand.Intn(9999999)), 1000, "/", "", false, false)
+	return l
+}
+
+func (l *Login) LoginHandler(c *gin.Context) {
+	zaplogger.Sugar().Infow("LoginHandler print token", "value", c.Request.Header.Get("Token"))
 	c.JSON(http.StatusOK, "121212121")
 }
 

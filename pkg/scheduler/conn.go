@@ -2,8 +2,8 @@ package scheduler
 
 import (
 	"context"
+	"github.com/Shanghai-Lunara/pkg/zaplogger"
 	"github.com/Shanghai-Lunara/publisher/pkg/conf"
-	"github.com/Shanghai-Lunara/publisher/pkg/dao"
 	"github.com/Shanghai-Lunara/publisher/pkg/types"
 	"github.com/gorilla/websocket"
 	"k8s.io/klog/v2"
@@ -33,7 +33,7 @@ func NewConnections(ctx context.Context, c *conf.Config) *connections {
 		removedChan:     make(chan int32, 100),
 		ctx:             ctx,
 	}
-	cs.scheduler = NewScheduler(cs.broadcast, dao.New(&c.Mysql), c)
+	cs.scheduler = NewScheduler(cs.broadcast, c)
 	go cs.remove()
 	go cs.broadcastToDashboard()
 	return cs
@@ -84,6 +84,7 @@ func (cs *connections) broadcastToDashboard() {
 			case broadcastTypePing:
 				cs.mu.RLock()
 				if t, ok := cs.items[broadcast.clientId]; ok {
+					zaplogger.Sugar().Info("ping")
 					t.ping()
 				} else {
 					// todo handle err
@@ -227,9 +228,9 @@ func (c *conn) close() {
 func (c *conn) readPump() {
 	defer c.close()
 	for {
-		messageType, data, err := c.conn.ReadMessage()
-		klog.V(5).Info("data:", data)
-		klog.V(5).Infof("messageType: %d message-string: %s\n", messageType, string(data))
+		_, data, err := c.conn.ReadMessage()
+		zaplogger.Sugar().Infow("ReadMessage", "data:", string(data))
+		//klog.V(4).Infof("messageType: %d message-string: %s\n", messageType, string(data))
 		if err != nil {
 			klog.V(2).Info(err)
 			return
