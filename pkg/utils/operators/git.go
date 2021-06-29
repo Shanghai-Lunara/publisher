@@ -50,6 +50,11 @@ func (g *Git) Run(output chan<- string) (res []string, err error) {
 	g.output = output
 	g.step.Phase = types.StepRunning
 	var out []byte
+	if out, err = g.fetchAll(); err != nil {
+		klog.V(2).Info(err)
+		//g.step.Phase = types.StepFailed
+		//return res, err
+	}
 	if out, err = g.cd(); err != nil {
 		klog.V(2).Info(err)
 		g.step.Phase = types.StepFailed
